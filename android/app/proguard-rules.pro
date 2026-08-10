@@ -1,0 +1,3 @@
+-keep class ru.murasya.prn.ui.MainActivity { *; }
+-keep class ru.murasya.prn.notify.ReminderReceiver { *; }
+-keep class ru.murasya.prn.notify.BootReceiver { *; }

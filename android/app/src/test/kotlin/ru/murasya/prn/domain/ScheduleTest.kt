@@ -1,0 +1,94 @@
+package ru.murasya.prn.domain
+
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import ru.murasya.prn.data.Med
+
+private val ZONE: ZoneId = ZoneId.of("Europe/Moscow")
+
+private fun at(hour: Int, minute: Int = 0, day: Int = 10): Long =
+    ZonedDateTime.of(2026, 8, day, hour, minute, 0, 0, ZONE).toInstant().toEpochMilli()
+
+private fun med(intervalHours: Double? = null, windowStartMinute: Int? = null, windowEndMinute: Int? = null) =
+    Med(
+        id = 1,
+        name = "Test",
+        intervalHours = intervalHours,
+        windowStartMinute = windowStartMinute,
+        windowEndMinute = windowEndMinute,
+        doseMg = 100.0,
+        dosesLeft = 10,
+        colorArgb = 0,
+        createdAt = at(0),
+    )
+
+class ScheduleTest {
+    @Test
+    fun anAbsentWindowIsAlwaysOpen() {
+        assertTrue(inWindow(at(3), null, null, ZONE))
+        assertTrue(inWindow(at(3), 540, null, ZONE))
+        assertTrue(inWindow(at(3), 540, 540, ZONE))
+    }
+
+    @Test
+    fun plainWindowIsHalfOpen() {
+        assertTrue(inWindow(at(9), 540, 1320, ZONE))
+        assertTrue(inWindow(at(21, 59), 540, 1320, ZONE))
+        assertFalse(inWindow(at(22), 540, 1320, ZONE))
+        assertFalse(inWindow(at(8, 59), 540, 1320, ZONE))
+    }
+
+    @Test
+    fun windowWrapsPastMidnight() {
+        assertTrue(inWindow(at(23), 1320, 360, ZONE))
+        assertTrue(inWindow(at(2), 1320, 360, ZONE))
+        assertFalse(inWindow(at(12), 1320, 360, ZONE))
+    }
+
+    @Test
+    fun timeInsideTheWindowIsKept() {
+        assertEquals(at(10), alignToWindow(at(10), 540, 1320, ZONE))
+    }
+
+    @Test
+    fun nightTimeIsDeferredToTheNextOpening() {
+        assertEquals(at(9), alignToWindow(at(3), 540, 1320, ZONE))
+    }
+
+    @Test
+    fun lateEveningIsDeferredToTheNextMorning() {
+        assertEquals(at(9, day = 11), alignToWindow(at(23), 540, 1320, ZONE))
+    }
+
+    @Test
+    fun noIntervalMeansNoDueDate() {
+        assertNull(nextDueAt(med(), at(10), ZONE))
+        assertNull(nextDueAt(med(intervalHours = 0.0), at(10), ZONE))
+    }
+
+    @Test
+    fun dueDateIsTheIntervalAfterTheLastDose() {
+        assertEquals(at(16), nextDueAt(med(intervalHours = 6.0), at(10), ZONE))
+    }
+
+    @Test
+    fun aDueDateOutsideTheWindowSlidesToTheWindowStart() {
+        val subject = med(intervalHours = 6.0, windowStartMinute = 540, windowEndMinute = 1320)
+        assertEquals(at(9, day = 11), nextDueAt(subject, at(21), ZONE))
+    }
+
+    @Test
+    fun neverTakenFallsBackToTheCreationTime() {
+        assertEquals(at(6), nextDueAt(med(intervalHours = 6.0), null, ZONE))
+    }
+
+    @Test
+    fun fractionalIntervalsWork() {
+        assertEquals(at(10, 30), nextDueAt(med(intervalHours = 0.5), at(10), ZONE))
+    }
+}
