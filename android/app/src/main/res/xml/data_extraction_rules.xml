@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Empty rule sets mean "everything", which here is exactly one SQLite file. Worth having so a new
+  phone starts with the log intact — the tolerance maths is only as good as the history behind it.
+-->
 <data-extraction-rules>
-    <cloud-backup>
-        <include domain="database" path="." />
-    </cloud-backup>
-    <device-transfer>
-        <include domain="database" path="." />
-    </device-transfer>
+    <cloud-backup />
+    <device-transfer />
 </data-extraction-rules>
