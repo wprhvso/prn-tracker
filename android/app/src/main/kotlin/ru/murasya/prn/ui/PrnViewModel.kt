@@ -68,6 +68,9 @@ class PrnViewModel(
     private val editorState = MutableStateFlow<EditorState?>(null)
     val editor: StateFlow<EditorState?> = editorState.asStateFlow()
 
+    private val undoable = MutableStateFlow<Intake?>(null)
+    val undoableIntake: StateFlow<Intake?> = undoable.asStateFlow()
+
     fun openCreate(color: Int) {
         val now = System.currentTimeMillis()
         editorState.value = EditorState(EditorMode.CREATE, MedDraft(colorArgb = color, takenAt = now))
@@ -107,29 +110,50 @@ class PrnViewModel(
                     dao.updateMed(med)
                     med.id
                 }
-            if (mode == EditorMode.EDIT) updateIntake(draft, id) else logIntake(id, med.doseMg, draft.takenAt)
+            if (mode == EditorMode.EDIT) {
+                updateIntake(draft, id)
+            } else {
+                logIntake(id, med.doseMg, draft.takenAt)
+            }
         }
 
+    /** One-tap logging from an alert card. The undo hook is what makes a mis-tap harmless. */
     fun take(medId: Long) =
         edit {
             val med = dao.med(medId) ?: return@edit
-            logIntake(med.id, med.doseMg, System.currentTimeMillis())
+            val at = System.currentTimeMillis()
+            val id = logIntake(med.id, med.doseMg, at)
+            undoable.value = Intake(id = id, medId = med.id, takenAt = at, doseMg = med.doseMg)
         }
+
+    fun undoTake() =
+        edit {
+            val intake = undoable.value ?: return@edit
+            undoable.value = null
+            dao.deleteIntake(intake.id)
+            dao.refundDose(intake.medId)
+        }
+
+    fun forgetUndo() {
+        undoable.value = null
+    }
 
     fun deleteMed(medId: Long) =
         edit {
             dao.med(medId)?.let { dao.deleteMed(it) }
         }
 
-    fun deleteIntake(intake: Intake) =
+    /** Removing a single mistaken entry puts its dose back in the tin. */
+    fun deleteIntake(intakeId: Long, medId: Long) =
         edit {
-            dao.deleteIntake(intake)
-            dao.refundDose(intake.medId)
+            dao.deleteIntake(intakeId)
+            dao.refundDose(medId)
         }
 
-    private suspend fun logIntake(medId: Long, doseMg: Double, at: Long) {
-        dao.insertIntake(Intake(medId = medId, takenAt = at, doseMg = doseMg))
+    private suspend fun logIntake(medId: Long, doseMg: Double, at: Long): Long {
+        val id = dao.insertIntake(Intake(medId = medId, takenAt = at, doseMg = doseMg))
         dao.spendDose(medId)
+        return id
     }
 
     private suspend fun updateIntake(draft: MedDraft, medId: Long) {

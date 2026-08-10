@@ -1,16 +1,12 @@
 package ru.murasya.prn.ui
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -21,8 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -31,13 +27,9 @@ import ru.murasya.prn.data.Med
 import ru.murasya.prn.domain.Alert
 import ru.murasya.prn.domain.AlertKind
 import ru.murasya.prn.domain.MINUTE_MS
-import ru.murasya.prn.domain.formatMultiplier
 import ru.murasya.prn.text.shortDuration
 
-/**
- * Everything the notifications would say, said again on the home screen — including the tolerance
- * warning, which is deliberately screen-only.
- */
+/** Everything the notifications say, said again on the home screen where it cannot be missed. */
 @Composable
 fun AlertCard(alert: Alert, now: Long, onTake: (Med) -> Unit) {
     Banner(
@@ -47,20 +39,20 @@ fun AlertCard(alert: Alert, now: Long, onTake: (Med) -> Unit) {
         title = alert.state.med.name,
         body = bodyOf(alert, now),
         action = if (alert.kind == AlertKind.DUE) stringResource(R.string.action_take) else null,
-        actionIcon = Icons.Rounded.Check,
+        actionIcon = R.drawable.ic_check,
         onAction = { onTake(alert.state.med) },
     )
 }
 
 @Composable
 fun Banner(
-    icon: ImageVector,
+    @DrawableRes icon: Int,
     container: Color,
     content: Color,
     title: String,
     body: String,
     action: String?,
-    actionIcon: ImageVector,
+    @DrawableRes actionIcon: Int,
     onAction: () -> Unit,
 ) {
     Surface(
@@ -74,7 +66,7 @@ fun Banner(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
+            Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp))
             BannerText(title, body, Modifier.weight(1f))
             if (action != null) BannerAction(action, actionIcon, onAction)
         }
@@ -90,12 +82,13 @@ private fun BannerText(title: String, body: String, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun BannerAction(label: String, icon: ImageVector, onClick: () -> Unit) {
-    FilledTonalButton(
-        onClick = onClick,
-        contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
-    ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+private fun BannerAction(
+    label: String,
+    @DrawableRes icon: Int,
+    onClick: () -> Unit,
+) {
+    FilledTonalButton(onClick = onClick, contentPadding = ButtonDefaults.ButtonWithIconContentPadding) {
+        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
         Text(text = label, modifier = Modifier.padding(start = ButtonDefaults.IconSpacing))
     }
 }
@@ -107,7 +100,6 @@ private fun bodyOf(alert: Alert, now: Long): String {
         AlertKind.DUE -> dueBody(alert, now)
         AlertKind.LOW_STOCK -> pluralStringResource(R.plurals.doses_left, med.dosesLeft, med.dosesLeft)
         AlertKind.OUT_OF_STOCK -> stringResource(R.string.alert_empty)
-        AlertKind.TOLERANCE -> toleranceBody(alert)
     }
 }
 
@@ -122,19 +114,12 @@ private fun dueBody(alert: Alert, now: Long): String {
     }
 }
 
-@Composable
-private fun toleranceBody(alert: Alert): String {
-    val multiplier = alert.state.tolerance ?: 0.0
-    val head = stringResource(R.string.alert_tolerance, formatMultiplier(multiplier))
-    return "$head  ·  ${stringResource(R.string.alert_tolerance_text)}"
-}
-
-private fun iconOf(kind: AlertKind): ImageVector =
+@DrawableRes
+private fun iconOf(kind: AlertKind): Int =
     when (kind) {
-        AlertKind.DUE -> Icons.Rounded.Notifications
-        AlertKind.LOW_STOCK -> Icons.Rounded.Info
-        AlertKind.OUT_OF_STOCK -> Icons.Rounded.Warning
-        AlertKind.TOLERANCE -> Icons.Rounded.Warning
+        AlertKind.DUE -> R.drawable.ic_due
+        AlertKind.LOW_STOCK -> R.drawable.ic_info
+        AlertKind.OUT_OF_STOCK -> R.drawable.ic_warning
     }
 
 @Composable
@@ -143,7 +128,6 @@ private fun containerOf(kind: AlertKind) =
         AlertKind.DUE -> MaterialTheme.colorScheme.primaryContainer
         AlertKind.LOW_STOCK -> MaterialTheme.colorScheme.tertiaryContainer
         AlertKind.OUT_OF_STOCK -> MaterialTheme.colorScheme.errorContainer
-        AlertKind.TOLERANCE -> MaterialTheme.colorScheme.secondaryContainer
     }
 
 @Composable
@@ -152,5 +136,4 @@ private fun containerContentOf(kind: AlertKind) =
         AlertKind.DUE -> MaterialTheme.colorScheme.onPrimaryContainer
         AlertKind.LOW_STOCK -> MaterialTheme.colorScheme.onTertiaryContainer
         AlertKind.OUT_OF_STOCK -> MaterialTheme.colorScheme.onErrorContainer
-        AlertKind.TOLERANCE -> MaterialTheme.colorScheme.onSecondaryContainer
     }

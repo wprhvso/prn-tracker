@@ -82,13 +82,13 @@ private fun EditorForm(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(text = titleOf(editor.mode), style = MaterialTheme.typography.headlineSmall)
-        EditorWarnings(medState, draft, now, zone)
+        EditorWarnings(medState, draft, editor.mode, now, zone)
         EditorFields(draft, zone, onDraftChange) { picking = it }
         EditorButtons(editor.mode, draft.valid, onCommit) { confirmingDelete = true }
     }
     TimePickers(draft, zone, now, picking, onDraftChange) { picking = TimeTarget.NONE }
     if (confirmingDelete) {
-        DeleteDialog(draft.name, onConfirm = onDelete, onDismiss = { confirmingDelete = false })
+        DeleteDialog(draft, onConfirm = onDelete, onDismiss = { confirmingDelete = false })
     }
 }
 
@@ -114,6 +114,7 @@ private fun EditorFields(draft: MedDraft, zone: ZoneId, onChange: (MedDraft) -> 
             decimal = false,
         )
     }
+    FieldLabel(stringResource(R.string.field_color))
     ColorRow(selected = draft.colorArgb, onSelect = { onChange(draft.copy(colorArgb = it)) })
     TimeButton(
         label = stringResource(R.string.field_taken_at),
@@ -149,6 +150,15 @@ private fun WindowFields(draft: MedDraft, onChange: (MedDraft) -> Unit, onPick: 
         }
         if (on) WindowButtons(draft, onPick)
     }
+}
+
+@Composable
+private fun FieldLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(bottom = 2.dp),
+    )
 }
 
 @Composable
@@ -227,12 +237,25 @@ private fun TimePickers(
     )
 }
 
+/**
+ * Long-pressing a log row offers to delete that one entry; long-pressing a medication card offers
+ * to delete the medication. The gesture already said which one the user meant.
+ */
 @Composable
-private fun DeleteDialog(name: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+private fun DeleteDialog(draft: MedDraft, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val entry = draft.intakeId != 0L
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.delete_title, name)) },
-        text = { Text(stringResource(R.string.delete_text)) },
+        title = {
+            Text(
+                if (entry) {
+                    stringResource(R.string.delete_entry_title)
+                } else {
+                    stringResource(R.string.delete_title, draft.name)
+                },
+            )
+        },
+        text = { Text(stringResource(if (entry) R.string.delete_entry_text else R.string.delete_text)) },
         confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.action_delete)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )

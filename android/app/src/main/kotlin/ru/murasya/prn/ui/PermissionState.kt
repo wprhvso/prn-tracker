@@ -8,9 +8,6 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -74,13 +71,13 @@ fun rememberPermissionState(): PermissionState {
 @Composable
 fun NotificationBanner(state: PermissionState) {
     Banner(
-        icon = Icons.Rounded.Notifications,
+        icon = R.drawable.ic_due,
         container = MaterialTheme.colorScheme.errorContainer,
         content = MaterialTheme.colorScheme.onErrorContainer,
         title = stringResource(R.string.perm_notifications_title),
         body = stringResource(R.string.perm_notifications_text),
         action = stringResource(R.string.perm_notifications_action),
-        actionIcon = Icons.Rounded.Notifications,
+        actionIcon = R.drawable.ic_due,
         onAction = state.askNotifications,
     )
 }
@@ -88,13 +85,13 @@ fun NotificationBanner(state: PermissionState) {
 @Composable
 fun ExactAlarmBanner(state: PermissionState) {
     Banner(
-        icon = Icons.Rounded.Warning,
+        icon = R.drawable.ic_alarm,
         container = MaterialTheme.colorScheme.surfaceContainerHigh,
         content = MaterialTheme.colorScheme.onSurface,
         title = stringResource(R.string.perm_alarms_title),
         body = stringResource(R.string.perm_alarms_text),
         action = stringResource(R.string.perm_alarms_action),
-        actionIcon = Icons.Rounded.Warning,
+        actionIcon = R.drawable.ic_alarm,
         onAction = state.askExactAlarms,
     )
 }

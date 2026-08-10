@@ -27,12 +27,20 @@ fun nextNagAt(dueAt: Long, now: Long): Long {
     return dueAt + (last + extra * NAG_TAIL_MINUTES) * MINUTE_MS
 }
 
-/** Everything the UI and the notifier need to know about one medication at one instant. */
+/**
+ * Everything the UI and the notifier need to know about one medication at one instant.
+ *
+ * Two clocks live here on purpose. [dueAt] is a fact about the drug — the moment the next dose
+ * becomes allowed — and is never bent by the allowed hours. [remindAt] is a fact about the user's
+ * day: the first moment we are permitted to speak. A dose that becomes allowed at 03:00 reads as
+ * ready the second you open the app, and still waits until the window opens before it makes noise.
+ */
 data class MedState(
     val med: Med,
     val lastTakenAt: Long?,
     val dueAt: Long?,
     val due: Boolean,
+    val windowOpen: Boolean,
     val tolerance: Double?,
     val remindAt: Long?,
 )
@@ -41,11 +49,6 @@ enum class AlertKind {
     OUT_OF_STOCK,
     DUE,
     LOW_STOCK,
-    TOLERANCE,
-    ;
-
-    /** Tolerance stays on screen only: pushing it would mean nagging someone who already stopped. */
-    val notifies: Boolean get() = this != TOLERANCE
 }
 
 data class Alert(
@@ -63,6 +66,14 @@ fun alerts(states: List<MedState>): List<Alert> =
         .flatMap { state -> alertKinds(state).map { kind -> Alert(kind, state) } }
         .sortedWith(compareBy({ it.kind.ordinal }, { it.state.med.name }))
 
+/**
+ * The subset worth waking someone for. A dose that is allowed but outside its hours stays on
+ * screen and off the notification shade; tolerance never gets here at all, because it is a state
+ * rather than an event and pushing it would mean nagging somebody who already stopped.
+ */
+fun notifiableAlerts(states: List<MedState>): List<Alert> =
+    alerts(states).filter { it.kind != AlertKind.DUE || it.state.windowOpen }
+
 /** The earliest moment any medication needs the app woken up again. */
 fun nextWakeAt(states: List<MedState>): Long? = states.mapNotNull { it.remindAt }.minOrNull()
 
@@ -73,18 +84,16 @@ private fun alertKinds(state: MedState): List<AlertKind> =
             state.med.dosesLeft <= 0 -> add(AlertKind.OUT_OF_STOCK)
             state.med.dosesLeft <= LOW_STOCK -> add(AlertKind.LOW_STOCK)
         }
-        val tolerance = state.tolerance
-        if (tolerance != null && tolerance >= TOLERANCE_WARN) add(AlertKind.TOLERANCE)
     }
 
 private fun medState(med: Med, lastTakenAt: Long?, intakes: List<Intake>, now: Long, zone: ZoneId): MedState {
-    val dueAt = nextDueAt(med, lastTakenAt, zone)
-    val open = inWindow(now, med.windowStartMinute, med.windowEndMinute, zone)
+    val dueAt = nextDueAt(med, lastTakenAt)
     return MedState(
         med = med,
         lastTakenAt = lastTakenAt,
         dueAt = dueAt,
-        due = dueAt != null && dueAt <= now && open,
+        due = dueAt != null && dueAt <= now,
+        windowOpen = inWindow(now, med.windowStartMinute, med.windowEndMinute, zone),
         tolerance = toleranceAt(now, med, intakes),
         remindAt = remindAt(med, dueAt, now, zone),
     )

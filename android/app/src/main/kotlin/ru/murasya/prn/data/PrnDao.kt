@@ -43,8 +43,8 @@ interface PrnDao {
     @Update
     suspend fun updateIntake(intake: Intake)
 
-    @Delete
-    suspend fun deleteIntake(intake: Intake)
+    @Query("DELETE FROM intake WHERE id = :id")
+    suspend fun deleteIntake(id: Long)
 
     @Query("UPDATE med SET dosesLeft = MAX(dosesLeft - 1, 0) WHERE id = :id")
     suspend fun spendDose(id: Long)

@@ -65,30 +65,40 @@ class ScheduleTest {
         assertEquals(at(9, day = 11), alignToWindow(at(23), 540, 1320, ZONE))
     }
 
+    /** Adding minutes to midnight would open a 09:00 window at 10:00 on the day the clocks move. */
+    @Test
+    fun springForwardDoesNotDragTheWindow() {
+        val berlin = ZoneId.of("Europe/Berlin")
+        val night = ZonedDateTime.of(2026, 3, 29, 0, 30, 0, 0, berlin).toInstant().toEpochMilli()
+        val morning = ZonedDateTime.of(2026, 3, 29, 9, 0, 0, 0, berlin).toInstant().toEpochMilli()
+        assertEquals(morning, alignToWindow(night, 540, 1320, berlin))
+    }
+
     @Test
     fun noIntervalMeansNoDueDate() {
-        assertNull(nextDueAt(med(), at(10), ZONE))
-        assertNull(nextDueAt(med(intervalHours = 0.0), at(10), ZONE))
+        assertNull(nextDueAt(med(), at(10)))
+        assertNull(nextDueAt(med(intervalHours = 0.0), at(10)))
     }
 
     @Test
     fun dueDateIsTheIntervalAfterTheLastDose() {
-        assertEquals(at(16), nextDueAt(med(intervalHours = 6.0), at(10), ZONE))
+        assertEquals(at(16), nextDueAt(med(intervalHours = 6.0), at(10)))
     }
 
+    /** Eligibility is a fact about the drug: the allowed hours may delay the reminder, never this. */
     @Test
-    fun aDueDateOutsideTheWindowSlidesToTheWindowStart() {
+    fun theAllowedHoursDoNotMoveTheDueDate() {
         val subject = med(intervalHours = 6.0, windowStartMinute = 540, windowEndMinute = 1320)
-        assertEquals(at(9, day = 11), nextDueAt(subject, at(21), ZONE))
+        assertEquals(at(3, day = 11), nextDueAt(subject, at(21)))
     }
 
     @Test
     fun neverTakenFallsBackToTheCreationTime() {
-        assertEquals(at(6), nextDueAt(med(intervalHours = 6.0), null, ZONE))
+        assertEquals(at(6), nextDueAt(med(intervalHours = 6.0), null))
     }
 
     @Test
     fun fractionalIntervalsWork() {
-        assertEquals(at(10, 30), nextDueAt(med(intervalHours = 0.5), at(10), ZONE))
+        assertEquals(at(10, 30), nextDueAt(med(intervalHours = 0.5), at(10)))
     }
 }

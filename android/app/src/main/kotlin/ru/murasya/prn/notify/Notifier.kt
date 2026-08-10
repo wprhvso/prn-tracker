@@ -36,7 +36,7 @@ fun ensureChannels(context: Context) {
  */
 fun syncNotifications(context: Context, alerts: List<Alert>) {
     val manager = context.getSystemService(NotificationManager::class.java) ?: return
-    val pushed = alerts.filter { it.kind.notifies }.associateBy(::notificationId)
+    val pushed = alerts.associateBy(::notificationId)
     manager.activeNotifications
         .map { it.id }
         .filterNot { pushed.containsKey(it) }
@@ -91,7 +91,6 @@ private fun build(context: Context, alert: Alert): Notification {
             .setContentText(text(context, alert))
             .setContentIntent(openApp(context))
             .setVisibility(Notification.VISIBILITY_PRIVATE)
-            .setOnlyAlertOnce(false)
             .setAutoCancel(false)
     return if (alert.kind == AlertKind.DUE) dueNotification(context, alert, builder) else stock(builder)
 }
@@ -107,6 +106,7 @@ private fun dueNotification(context: Context, alert: Alert, builder: Notificatio
     val dueAt = alert.state.dueAt
     builder
         .setCategory(Notification.CATEGORY_ALARM)
+        .setOnlyAlertOnce(false)
         .setOngoing(true)
         .setFullScreenIntent(openApp(context), true)
         .addAction(takeAction(context, alert))
@@ -119,8 +119,12 @@ private fun dueNotification(context: Context, alert: Alert, builder: Notificatio
     return builder.build()
 }
 
+/** Running low is worth a line in the shade, not a buzz every time the log is touched. */
 private fun stock(builder: Notification.Builder): Notification =
-    builder.setCategory(Notification.CATEGORY_REMINDER).build()
+    builder
+        .setCategory(Notification.CATEGORY_REMINDER)
+        .setOnlyAlertOnce(true)
+        .build()
 
 private fun channelOf(kind: AlertKind): String = if (kind == AlertKind.DUE) CHANNEL_DOSE else CHANNEL_STOCK
 
@@ -130,7 +134,6 @@ private fun title(context: Context, alert: Alert): String {
         AlertKind.DUE -> context.getString(R.string.notify_due_title, name)
         AlertKind.LOW_STOCK -> context.getString(R.string.notify_low_title, name)
         AlertKind.OUT_OF_STOCK -> context.getString(R.string.notify_empty_title, name)
-        AlertKind.TOLERANCE -> name
     }
 }
 
@@ -140,7 +143,6 @@ private fun text(context: Context, alert: Alert): String {
         AlertKind.DUE -> dueText(context, alert)
         AlertKind.LOW_STOCK -> context.resources.getQuantityString(R.plurals.doses_left, med.dosesLeft, med.dosesLeft)
         AlertKind.OUT_OF_STOCK -> context.getString(R.string.notify_empty_text)
-        AlertKind.TOLERANCE -> ""
     }
 }
 

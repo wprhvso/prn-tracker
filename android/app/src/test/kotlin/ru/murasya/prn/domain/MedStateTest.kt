@@ -75,12 +75,24 @@ class MedStateTest {
         }
     }
 
+    /** Outside its hours a dose is still allowed — the app says so, the notification waits. */
     @Test
-    fun beingOutsideTheWindowSuppressesTheAlert() {
+    fun outsideTheWindowTheDoseIsDueOnScreenButSilent() {
         val subject = med(windowStartMinute = 540, windowEndMinute = 1320)
         val state = single(subject, listOf(intake(1, moment(14))), moment(23))
-        assertFalse(state.due)
+        assertTrue(state.due)
+        assertFalse(state.windowOpen)
         assertEquals(moment(9, day = 11), state.remindAt)
+        assertEquals(listOf(AlertKind.DUE), alerts(listOf(state)).map { it.kind })
+        assertEquals(emptyList<AlertKind>(), notifiableAlerts(listOf(state)).map { it.kind })
+    }
+
+    @Test
+    fun insideTheWindowTheSameDoseIsNotifiable() {
+        val subject = med(windowStartMinute = 540, windowEndMinute = 1320)
+        val state = single(subject, listOf(intake(1, moment(14))), moment(21))
+        assertTrue(state.windowOpen)
+        assertEquals(listOf(AlertKind.DUE), notifiableAlerts(listOf(state)).map { it.kind })
     }
 
     @Test
@@ -98,20 +110,20 @@ class MedStateTest {
         val plenty = medStates(listOf(med(id = 1, intervalHours = null, dosesLeft = 4)), emptyList(), now, ZONE)
         val low = medStates(listOf(med(id = 2, intervalHours = null, dosesLeft = 3)), emptyList(), now, ZONE)
         val empty = medStates(listOf(med(id = 3, intervalHours = null, dosesLeft = 0)), emptyList(), now, ZONE)
-        assertFalse(alerts(plenty).any { it.kind == AlertKind.LOW_STOCK })
+        assertEquals(emptyList<AlertKind>(), alerts(plenty).map { it.kind })
         assertEquals(listOf(AlertKind.LOW_STOCK), alerts(low).map { it.kind })
         assertEquals(listOf(AlertKind.OUT_OF_STOCK), alerts(empty).map { it.kind })
     }
 
+    /** Tolerance is a state, not an event: it must never be able to reach the notification shade. */
     @Test
-    fun toleranceOnlyAlertsOnceItDoublesAndNeverPushes() {
+    fun toleranceIsMeasuredButNeverAlerted() {
         val now = moment(12)
-        val subject = med(toleranceDays = 14.0)
-        val one = single(subject, listOf(intake(1, now)), now)
-        val two = single(subject, listOf(intake(1, now, id = 1), intake(1, now, id = 2)), now)
-        assertFalse(alerts(listOf(one)).any { it.kind == AlertKind.TOLERANCE })
-        assertTrue(alerts(listOf(two)).any { it.kind == AlertKind.TOLERANCE })
-        assertFalse(AlertKind.TOLERANCE.notifies)
+        val subject = med(intervalHours = null, toleranceDays = 14.0)
+        val doses = listOf(intake(1, now, id = 1), intake(1, now, id = 2), intake(1, now, id = 3))
+        val state = single(subject, doses, now)
+        assertEquals(3.0, state.tolerance ?: 0.0, 1e-6)
+        assertEquals(emptyList<AlertKind>(), alerts(listOf(state)).map { it.kind })
     }
 
     @Test
@@ -125,21 +137,13 @@ class MedStateTest {
 
     @Test
     fun alertsComeOutInSeverityOrder() {
-        val now = moment(20)
         val states =
             medStates(
-                listOf(med(id = 1, dosesLeft = 0, toleranceDays = 30.0)),
-                listOf(
-                    intake(1, moment(10), id = 1),
-                    intake(1, moment(11), id = 2),
-                    intake(1, moment(12), id = 3),
-                ),
-                now,
+                listOf(med(id = 1, dosesLeft = 0)),
+                listOf(intake(1, moment(10))),
+                moment(20),
                 ZONE,
             )
-        assertEquals(
-            listOf(AlertKind.OUT_OF_STOCK, AlertKind.DUE, AlertKind.TOLERANCE),
-            alerts(states).map { it.kind },
-        )
+        assertEquals(listOf(AlertKind.OUT_OF_STOCK, AlertKind.DUE), alerts(states).map { it.kind })
     }
 }

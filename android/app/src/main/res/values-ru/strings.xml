@@ -12,17 +12,15 @@
     <string name="alert_due_late">Можно было %1$s</string>
     <string name="alert_empty">Дозы закончились</string>
     <string name="alert_tolerance">Толерантность ×%1$s</string>
-    <string name="alert_tolerance_text">Эффект притупился, перерыв его вернёт</string>
+    <string name="tolerance_reset">сброс через %1$s</string>
 
     <!-- Medication status -->
     <string name="status_ready">Можно</string>
     <string name="status_next">Следующая %1$s</string>
     <string name="status_free">По необходимости</string>
-    <string name="status_never">Ещё не принимали</string>
     <string name="status_last">Последняя %1$s</string>
     <string name="dose_mg">%1$s мг</string>
     <string name="window_range">%1$s–%2$s</string>
-    <string name="every_hours">раз в %1$s ч</string>
 
     <!-- Editor -->
     <string name="editor_new">Новый препарат</string>
@@ -46,7 +44,6 @@
     <string name="action_delete">Удалить</string>
     <string name="action_cancel">Отмена</string>
     <string name="action_undo">Вернуть</string>
-    <string name="action_close">Закрыть</string>
     <string name="action_add">Добавить</string>
     <string name="action_ok">Понятно</string>
 
@@ -55,10 +52,13 @@
     <string name="warn_window">Вне разрешённого диапазона %1$s</string>
     <string name="warn_stock">Доз в запасе не осталось</string>
     <string name="warn_tolerance">Толерантность ×%1$s — перерыв %2$s её сбросит</string>
+    <string name="warn_tolerance_after">После этой дозы толерантность ×%1$s — сбросит перерыв %2$s</string>
 
     <!-- Delete confirmation -->
     <string name="delete_title">Удалить «%1$s»?</string>
     <string name="delete_text">Препарат и весь его лог будут удалены.</string>
+    <string name="delete_entry_title">Удалить эту запись?</string>
+    <string name="delete_entry_text">Доза вернётся в запас.</string>
 
     <!-- Permissions -->
     <string name="perm_notifications_title">Уведомления выключены</string>
@@ -82,14 +82,12 @@
 
     <!-- Snackbars -->
     <string name="snack_taken">%1$s — записано</string>
-    <string name="snack_deleted">%1$s удалён</string>
 
     <!-- Durations -->
     <string name="dur_days_hours">%1$d д %2$d ч</string>
     <string name="dur_hours_minutes">%1$d ч %2$d мин</string>
     <string name="dur_minutes">%1$d мин</string>
     <string name="dur_now">сейчас</string>
-    <string name="dur_days">%1$d д</string>
     <string name="time_in">через %1$s</string>
     <string name="time_ago">%1$s назад</string>
 

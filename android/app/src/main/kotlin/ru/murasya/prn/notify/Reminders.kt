@@ -4,9 +4,9 @@ import android.content.Context
 import java.time.ZoneId
 import ru.murasya.prn.data.Intake
 import ru.murasya.prn.data.PrnDatabase
-import ru.murasya.prn.domain.alerts
 import ru.murasya.prn.domain.medStates
 import ru.murasya.prn.domain.nextWakeAt
+import ru.murasya.prn.domain.notifiableAlerts
 
 /**
  * Recomputes the whole reminder state from the database and applies it: the shade is brought in
@@ -24,7 +24,7 @@ suspend fun refreshReminders(context: Context) {
             zone = ZoneId.systemDefault(),
         )
     ensureChannels(app)
-    syncNotifications(app, alerts(states))
+    syncNotifications(app, notifiableAlerts(states))
     scheduleNextTick(app, nextWakeAt(states))
 }
 

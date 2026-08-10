@@ -9,23 +9,27 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -46,12 +50,15 @@ fun PrnScreen(viewModel: PrnViewModel = viewModel()) {
     val permissions = rememberPermissionState()
     val zone = remember { ZoneId.systemDefault() }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val snackbar = remember { SnackbarHostState() }
 
     LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.refresh() }
+    UndoBar(state, viewModel, snackbar)
 
     Scaffold(
         modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = { PrnTopBar(scrollBehavior) },
+        snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = { AddButton { viewModel.openCreate(nextColor(state.usedColors())) } },
     ) { padding ->
         LogList(
@@ -69,6 +76,24 @@ fun PrnScreen(viewModel: PrnViewModel = viewModel()) {
     Editor(editor, state, zone, viewModel)
 }
 
+/** A dose logged in one tap deserves to be un-logged in one tap. */
+@Composable
+private fun UndoBar(state: PrnUiState, viewModel: PrnViewModel, host: SnackbarHostState) {
+    val logged by viewModel.undoableIntake.collectAsStateWithLifecycle()
+    val intake = logged ?: return
+    val name =
+        state.states
+            .firstOrNull { it.med.id == intake.medId }
+            ?.med
+            ?.name ?: return
+    val message = stringResource(R.string.snack_taken, name)
+    val undo = stringResource(R.string.action_undo)
+    LaunchedEffect(intake.id) {
+        val result = host.showSnackbar(message, undo, duration = SnackbarDuration.Short)
+        if (result == SnackbarResult.ActionPerformed) viewModel.undoTake() else viewModel.forgetUndo()
+    }
+}
+
 @Composable
 private fun Editor(editor: EditorState?, state: PrnUiState, zone: ZoneId, viewModel: PrnViewModel) {
     if (editor == null) return
@@ -84,7 +109,12 @@ private fun Editor(editor: EditorState?, state: PrnUiState, zone: ZoneId, viewMo
             viewModel.closeEditor()
         },
         onDelete = {
-            viewModel.deleteMed(editor.draft.medId)
+            val draft = editor.draft
+            if (draft.intakeId != 0L) {
+                viewModel.deleteIntake(draft.intakeId, draft.medId)
+            } else {
+                viewModel.deleteMed(draft.medId)
+            }
             viewModel.closeEditor()
         },
         onDismiss = viewModel::closeEditor,
@@ -103,7 +133,7 @@ private fun PrnTopBar(scrollBehavior: TopAppBarScrollBehavior) {
 @Composable
 private fun AddButton(onClick: () -> Unit) {
     FloatingActionButton(onClick = onClick, shape = MaterialTheme.shapes.large) {
-        Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.action_add))
+        Icon(painterResource(R.drawable.ic_add), contentDescription = stringResource(R.string.action_add))
     }
 }
 

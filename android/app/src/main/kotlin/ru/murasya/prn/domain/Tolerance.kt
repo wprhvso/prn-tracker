@@ -1,19 +1,27 @@
 package ru.murasya.prn.domain
 
+import kotlin.math.exp
+import kotlin.math.ln
 import ru.murasya.prn.data.Intake
 import ru.murasya.prn.data.Med
 
 /** From this multiplier upwards the tolerance warning turns loud. */
 const val TOLERANCE_WARN = 2.0
 
+/** Past this age, measured in tolerance windows, a dose can no longer move the first decimal. */
+private const val TOLERANCE_TAIL = 15.0
+
 /**
- * How much tolerance has piled up by [at], counted in "doses worth".
+ * How much tolerance has piled up by [at], counted in doses per tolerance window.
  *
- * One dose contributes `1.0` the moment it is swallowed and fades linearly to zero over
- * [Med.toleranceDays]; a dose twice the usual size counts double. The sum of those contributions is
- * the multiplier shown as `x2.4` — at `x1` exactly one fresh dose is on board, at `x3` three of
- * them, which is what "exceeded threefold" means. Because every contribution decays on its own,
- * abstaining drains the number back to zero and the warning disappears without anyone nagging.
+ * A dose contributes `1.0` the moment it is swallowed and decays exponentially with a time constant
+ * of [Med.toleranceDays]; a dose twice the usual size counts double. The exponential is the only
+ * smooth curve where a single fresh dose reads exactly `x1` *and* a steady habit of N doses per
+ * window averages exactly `xN` — a linear ramp, for instance, quietly halves the number, so a
+ * once-a-day user of a fortnight-tolerance drug would see `x7` where the honest answer is `x14`.
+ *
+ * Because every contribution decays on its own, abstaining drains the number back to baseline,
+ * which is why tolerance never has to nag: stop taking the drug and the warning leaves by itself.
  */
 fun toleranceAt(at: Long, med: Med, intakes: List<Intake>): Double? {
     val window = toleranceWindow(med) ?: return null
@@ -21,15 +29,20 @@ fun toleranceAt(at: Long, med: Med, intakes: List<Intake>): Double? {
     return intakes
         .filter { it.medId == med.id }
         .sumOf { intake ->
-            val age = at - intake.takenAt
-            if (age < 0L || age >= window) 0.0 else intake.doseMg / unit * (1.0 - age / window)
+            val age = (at - intake.takenAt) / window
+            if (age < 0.0 || age > TOLERANCE_TAIL) 0.0 else intake.doseMg / unit * exp(-age)
         }
+}
+
+/** Days off the drug that would bring [load] back to baseline — the promise the warning makes. */
+fun daysToReset(load: Double, med: Med): Double? {
+    val days = med.toleranceDays?.takeIf { it > 0.0 } ?: return null
+    return if (load <= 1.0) 0.0 else days * ln(load)
 }
 
 /**
  * The multiplier as it stood at the moment of every intake, keyed by intake id, so the log can show
- * how deep the hole already was each time. Only intakes inside the decay window matter, which keeps
- * this linear in practice however long the log grows.
+ * how deep the hole already was each time. Exponential decay is memoryless, so this is one pass.
  */
 fun toleranceHistory(meds: List<Med>, intakes: List<Intake>): Map<Long, Double> {
     val byMed = intakes.groupBy { it.medId }
@@ -39,16 +52,13 @@ fun toleranceHistory(meds: List<Med>, intakes: List<Intake>): Map<Long, Double> 
 private fun medToleranceHistory(med: Med, own: List<Intake>): List<Pair<Long, Double>> {
     val window = toleranceWindow(med) ?: return emptyList()
     val unit = doseUnit(med)
-    val ordered = own.sortedBy { it.takenAt }
-    var oldest = 0
-    return ordered.mapIndexed { index, intake ->
-        while (intake.takenAt - ordered[oldest].takenAt >= window) oldest++
-        val carried =
-            (oldest..index).sumOf { past ->
-                val age = intake.takenAt - ordered[past].takenAt
-                ordered[past].doseMg / unit * (1.0 - age / window)
-            }
-        intake.id to carried
+    var load = 0.0
+    var previous: Long? = null
+    return own.sortedBy { it.takenAt }.map { intake ->
+        previous?.let { load *= exp(-(intake.takenAt - it) / window) }
+        load += intake.doseMg / unit
+        previous = intake.takenAt
+        intake.id to load
     }
 }
 

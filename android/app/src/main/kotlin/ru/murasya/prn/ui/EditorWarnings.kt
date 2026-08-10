@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -15,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import java.time.ZoneId
@@ -22,6 +21,7 @@ import ru.murasya.prn.R
 import ru.murasya.prn.domain.DAY_MS
 import ru.murasya.prn.domain.MedState
 import ru.murasya.prn.domain.TOLERANCE_WARN
+import ru.murasya.prn.domain.daysToReset
 import ru.murasya.prn.domain.formatMinuteOfDay
 import ru.murasya.prn.domain.formatMultiplier
 import ru.murasya.prn.domain.inWindow
@@ -34,10 +34,10 @@ import ru.murasya.prn.text.shortDuration
  * already stopped.
  */
 @Composable
-fun EditorWarnings(state: MedState?, draft: MedDraft, now: Long, zone: ZoneId) {
+fun EditorWarnings(state: MedState?, draft: MedDraft, mode: EditorMode, now: Long, zone: ZoneId) {
     val warnings =
         listOfNotNull(
-            toleranceWarning(state, draft),
+            toleranceWarning(state, draft, mode),
             earlyWarning(state, now),
             windowWarning(draft, now, zone),
             stockWarning(draft),
@@ -66,22 +66,37 @@ private fun WarningLines(warnings: List<String>) {
 @Composable
 private fun WarningLine(text: String) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(Icons.Rounded.Warning, contentDescription = null, modifier = Modifier.size(20.dp))
+        Icon(painterResource(R.drawable.ic_warning), contentDescription = null, modifier = Modifier.size(20.dp))
         Text(text = text, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
+/**
+ * Shows where this dose *lands*, not where the user already is: at the moment of deciding, the
+ * number that matters is the one they are about to create.
+ */
 @Composable
-private fun toleranceWarning(state: MedState?, draft: MedDraft): String? {
+private fun toleranceWarning(state: MedState?, draft: MedDraft, mode: EditorMode): String? {
     val context = LocalContext.current
-    val tolerance = state?.tolerance ?: return null
-    if (tolerance < TOLERANCE_WARN) return null
-    val days = draft.toleranceDays.toPositiveDouble() ?: return null
-    return stringResource(
-        R.string.warn_tolerance,
-        formatMultiplier(tolerance),
-        shortDuration(context, (days * DAY_MS).toLong()),
-    )
+    val med = state?.med ?: return null
+    val carried = state.tolerance ?: return null
+    val adding = if (mode == EditorMode.EDIT) 0.0 else doseWeight(draft, med.doseMg)
+    val projected = carried + adding
+    if (projected < TOLERANCE_WARN) return null
+    val reset = daysToReset(projected, med) ?: return null
+    val off = shortDuration(context, (reset * DAY_MS).toLong())
+    val shown = formatMultiplier(projected)
+    return if (adding > 0.0) {
+        stringResource(R.string.warn_tolerance_after, shown, off)
+    } else {
+        stringResource(R.string.warn_tolerance, shown, off)
+    }
+}
+
+/** How many reference doses this one is worth, so a double dose warns like two. */
+private fun doseWeight(draft: MedDraft, reference: Double): Double {
+    val unit = if (reference > 0.0) reference else 1.0
+    return (draft.doseMg.toPositiveDouble() ?: reference) / unit
 }
 
 @Composable

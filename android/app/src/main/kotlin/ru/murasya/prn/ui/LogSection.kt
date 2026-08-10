@@ -35,6 +35,9 @@ import ru.murasya.prn.data.Med
 import ru.murasya.prn.domain.formatMultiplier
 import ru.murasya.prn.domain.formatNumber
 
+/** Lines up the clock column so 09:05 and 14:22 share a left edge. */
+private const val TABULAR = "tnum"
+
 /** One day of the log, rendered as a single rounded slab so the list reads as grouped, not ragged. */
 @Composable
 fun DaySection(
@@ -99,12 +102,12 @@ private fun LogRow(
             )
         }
         Row(modifier = row, verticalAlignment = Alignment.CenterVertically) {
-            Swatch(entry.med.colorArgb)
+            ColorBar(entry.med.colorArgb)
             Spacer(Modifier.width(14.dp))
             EntryText(entry, Modifier.weight(1f))
             Text(
                 text = timeLabel(entry.intake.takenAt, zone),
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = TABULAR),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -135,6 +138,21 @@ private fun entryDetail(entry: LogEntry): String {
     val dose = stringResource(R.string.dose_mg, formatNumber(entry.intake.doseMg))
     val tolerance = entry.tolerance ?: return dose
     return "$dose  ·  ${stringResource(R.string.alert_tolerance, formatMultiplier(tolerance))}"
+}
+
+/**
+ * A bar rather than a dot: down a column of rows the eye follows a vertical stripe far faster, and
+ * the log is meant to be skimmed, not read.
+ */
+@Composable
+private fun ColorBar(argb: Int) {
+    Box(
+        modifier =
+            Modifier
+                .size(width = 5.dp, height = 32.dp)
+                .clip(CircleShape)
+                .background(Color(argb)),
+    )
 }
 
 /** The medication's colour, the one thing that lets the eye group the log at a glance. */

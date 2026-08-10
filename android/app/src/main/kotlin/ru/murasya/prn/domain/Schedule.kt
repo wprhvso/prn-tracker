@@ -1,6 +1,7 @@
 package ru.murasya.prn.domain
 
 import java.time.Instant
+import java.time.LocalTime
 import java.time.ZoneId
 import ru.murasya.prn.data.Med
 
@@ -37,23 +38,27 @@ fun minuteOfDay(at: Long, zone: ZoneId): Int {
     return local.hour * MINUTES_PER_HOUR + local.minute
 }
 
-/** When the next dose becomes allowed, or null when the medication has no interval configured. */
-fun nextDueAt(med: Med, lastTakenAt: Long?, zone: ZoneId): Long? {
+/**
+ * When the next dose becomes allowed, or null when the medication has no interval configured.
+ *
+ * Deliberately not clamped to the allowed hours: this is eligibility, not delivery. Bending it
+ * would make the app claim a dose is not yet allowed when the only thing stopping it is the clock.
+ */
+fun nextDueAt(med: Med, lastTakenAt: Long?): Long? {
     val hours = med.intervalHours ?: return null
     if (hours <= 0.0) return null
     val from = lastTakenAt ?: med.createdAt
-    val due = from + (hours * HOUR_MS).toLong()
-    return alignToWindow(due, med.windowStartMinute, med.windowEndMinute, zone)
+    return from + (hours * HOUR_MS).toLong()
 }
 
+/**
+ * Built from a [LocalTime] rather than by adding minutes to midnight: adding minutes is an exact
+ * duration, so on the day the clocks go forward a 09:00 window would open at 10:00.
+ */
 private fun nextTimeOfDay(at: Long, minute: Int, zone: ZoneId): Long {
-    val midnight =
-        Instant
-            .ofEpochMilli(at)
-            .atZone(zone)
-            .toLocalDate()
-            .atStartOfDay(zone)
-    val today = midnight.plusMinutes(minute.toLong())
-    val next = if (today.toInstant().toEpochMilli() > at) today else today.plusDays(1)
+    val date = Instant.ofEpochMilli(at).atZone(zone).toLocalDate()
+    val time = LocalTime.of(minute / MINUTES_PER_HOUR, minute % MINUTES_PER_HOUR)
+    val today = date.atTime(time).atZone(zone)
+    val next = if (today.toInstant().toEpochMilli() > at) today else date.plusDays(1).atTime(time).atZone(zone)
     return next.toInstant().toEpochMilli()
 }
