@@ -227,7 +227,7 @@ private fun TimePickers(
             TimeTarget.WINDOW_START -> draft.windowStartMinute ?: DEFAULT_WINDOW_START
             else -> draft.windowEndMinute ?: DEFAULT_WINDOW_END
         }
-    TimePickerDialog(
+    PrnTimePickerDialog(
         initialMinuteOfDay = initial,
         onDismiss = onClose,
         onConfirm = { minute ->

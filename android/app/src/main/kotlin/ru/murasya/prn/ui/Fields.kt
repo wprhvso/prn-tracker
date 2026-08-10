@@ -53,7 +53,7 @@ fun PlainField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        supportingText = supporting?.let { { Text(it) } },
+        supportingText = supporting?.let { hint -> { Text(hint) } },
         singleLine = true,
         shape = MaterialTheme.shapes.medium,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -75,7 +75,7 @@ fun NumberField(
         value = value,
         onValueChange = { onValueChange(it.filter { char -> char.isDigit() || char == '.' || char == ',' }) },
         label = { Text(label) },
-        supportingText = supporting?.let { { Text(it) } },
+        supportingText = supporting?.let { hint -> { Text(hint) } },
         singleLine = true,
         shape = MaterialTheme.shapes.medium,
         keyboardOptions =
@@ -132,7 +132,7 @@ fun TimeButton(label: String, minuteOfDay: Int, onClick: () -> Unit, modifier: M
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimePickerDialog(initialMinuteOfDay: Int, onDismiss: () -> Unit, onConfirm: (Int) -> Unit) {
+fun PrnTimePickerDialog(initialMinuteOfDay: Int, onDismiss: () -> Unit, onConfirm: (Int) -> Unit) {
     val context = LocalContext.current
     val state =
         rememberTimePickerState(
