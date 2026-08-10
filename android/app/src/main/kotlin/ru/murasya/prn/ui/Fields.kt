@@ -1,11 +1,13 @@
 package ru.murasya.prn.ui
 
+import android.graphics.Color as AndroidColor
 import android.text.format.DateFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +22,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimeInput
@@ -29,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,6 +45,9 @@ import ru.murasya.prn.domain.MINUTES_PER_HOUR
 import ru.murasya.prn.domain.formatMinuteOfDay
 
 private const val SWATCH_SIZE = 34
+private const val SWATCH_SATURATION = 0.62f
+private const val SWATCH_VALUE = 0.85f
+private const val MAX_HUE = 360f
 
 @Composable
 fun PlainField(
@@ -87,14 +95,43 @@ fun NumberField(
     )
 }
 
+/**
+ * Twelve presets for speed and a hue slider for everything else. Saturation and lightness are held
+ * fixed so every colour the user can reach still reads against both themes.
+ */
 @Composable
-fun ColorRow(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+fun ColorPicker(selected: Int, onSelect: (Int) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        ColorRow(selected, onSelect)
+        HueSlider(selected, onSelect)
+    }
+}
+
+@Composable
+private fun ColorRow(selected: Int, onSelect: (Int) -> Unit) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         MED_COLORS.forEach { argb -> ColorDot(argb, argb == selected, onSelect) }
     }
+}
+
+@Composable
+private fun HueSlider(selected: Int, onSelect: (Int) -> Unit) {
+    val chosen = Color(selected)
+    Slider(
+        value = hueOf(selected),
+        onValueChange = { hue -> onSelect(Color.hsv(hue, SWATCH_SATURATION, SWATCH_VALUE).toArgb()) },
+        valueRange = 0f..MAX_HUE,
+        colors = SliderDefaults.colors(thumbColor = chosen, activeTrackColor = chosen),
+    )
+}
+
+private fun hueOf(argb: Int): Float {
+    val hsv = FloatArray(3)
+    AndroidColor.colorToHSV(argb, hsv)
+    return hsv[0]
 }
 
 @Composable

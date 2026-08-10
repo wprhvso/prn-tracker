@@ -115,7 +115,7 @@ private fun EditorFields(draft: MedDraft, zone: ZoneId, onChange: (MedDraft) -> 
         )
     }
     FieldLabel(stringResource(R.string.field_color))
-    ColorRow(selected = draft.colorArgb, onSelect = { onChange(draft.copy(colorArgb = it)) })
+    ColorPicker(selected = draft.colorArgb, onSelect = { onChange(draft.copy(colorArgb = it)) })
     TimeButton(
         label = stringResource(R.string.field_taken_at),
         minuteOfDay = minuteOfDayOf(draft.takenAt, zone),
