@@ -88,6 +88,8 @@ private fun LogRow(
         Modifier
             .fillMaxWidth()
             .combinedClickable(
+                onClickLabel = stringResource(R.string.editor_take),
+                onLongClickLabel = stringResource(R.string.editor_edit),
                 onClick = { onTake(entry.med) },
                 onLongClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)

@@ -63,6 +63,8 @@ private fun MedCard(state: MedState, now: Long, onTake: (Med) -> Unit, onEdit: (
         Modifier
             .width(190.dp)
             .combinedClickable(
+                onClickLabel = stringResource(R.string.editor_take),
+                onLongClickLabel = stringResource(R.string.editor_edit),
                 onClick = { onTake(state.med) },
                 onLongClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
