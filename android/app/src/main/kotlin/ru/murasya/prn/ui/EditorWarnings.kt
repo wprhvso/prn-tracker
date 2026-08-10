@@ -118,6 +118,6 @@ private fun windowWarning(draft: MedDraft, now: Long, zone: ZoneId): String? {
 
 @Composable
 private fun stockWarning(draft: MedDraft): String? {
-    val left = draft.dosesLeft.trim().toIntOrNull() ?: 0
+    val left = draft.dosesLeft.trim().toIntOrNull() ?: return null
     return if (left <= 0) stringResource(R.string.warn_stock) else null
 }

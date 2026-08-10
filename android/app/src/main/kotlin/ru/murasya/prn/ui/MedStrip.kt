@@ -129,6 +129,7 @@ private fun metaText(state: MedState): String {
             parts += stringResource(R.string.tolerance_reset, shortDuration(context, (reset * DAY_MS).toLong()))
         }
     }
-    parts += pluralStringResource(R.plurals.doses_left, state.med.dosesLeft, state.med.dosesLeft)
+    val left = state.med.dosesLeft
+    if (left != null) parts += pluralStringResource(R.plurals.doses_left, left, left)
     return parts.joinToString("  ·  ")
 }

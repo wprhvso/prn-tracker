@@ -98,10 +98,13 @@ private fun bodyOf(alert: Alert, now: Long): String {
     val med = alert.state.med
     return when (alert.kind) {
         AlertKind.DUE -> dueBody(alert, now)
-        AlertKind.LOW_STOCK -> pluralStringResource(R.plurals.doses_left, med.dosesLeft, med.dosesLeft)
+        AlertKind.LOW_STOCK -> stockLeft(med.dosesLeft ?: 0)
         AlertKind.OUT_OF_STOCK -> stringResource(R.string.alert_empty)
     }
 }
+
+@Composable
+private fun stockLeft(left: Int): String = pluralStringResource(R.plurals.doses_left, left, left)
 
 @Composable
 private fun dueBody(alert: Alert, now: Long): String {

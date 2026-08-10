@@ -18,7 +18,7 @@ private fun moment(hour: Int, minute: Int = 0, day: Int = 10): Long =
 private fun med(
     id: Long = 1,
     intervalHours: Double? = 6.0,
-    dosesLeft: Int = 10,
+    dosesLeft: Int? = 10,
     toleranceDays: Double? = null,
     windowStartMinute: Int? = null,
     windowEndMinute: Int? = null,
@@ -110,9 +110,11 @@ class MedStateTest {
         val plenty = medStates(listOf(med(id = 1, intervalHours = null, dosesLeft = 4)), emptyList(), now, ZONE)
         val low = medStates(listOf(med(id = 2, intervalHours = null, dosesLeft = 3)), emptyList(), now, ZONE)
         val empty = medStates(listOf(med(id = 3, intervalHours = null, dosesLeft = 0)), emptyList(), now, ZONE)
+        val untracked = medStates(listOf(med(id = 4, intervalHours = null, dosesLeft = null)), emptyList(), now, ZONE)
         assertEquals(emptyList<AlertKind>(), alerts(plenty).map { it.kind })
         assertEquals(listOf(AlertKind.LOW_STOCK), alerts(low).map { it.kind })
         assertEquals(listOf(AlertKind.OUT_OF_STOCK), alerts(empty).map { it.kind })
+        assertEquals(emptyList<AlertKind>(), alerts(untracked).map { it.kind })
     }
 
     /** Tolerance is a state, not an event: it must never be able to reach the notification shade. */

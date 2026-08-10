@@ -25,8 +25,8 @@ data class Med(
     val windowEndMinute: Int? = null,
     /** Size of a single dose in milligrams. */
     val doseMg: Double = 0.0,
-    /** How many doses are left in stock. */
-    val dosesLeft: Int = 0,
+    /** How many doses are left in stock, or null when stock is not being tracked. */
+    val dosesLeft: Int? = null,
     /** Days it takes for a single dose worth of tolerance to wear off. */
     val toleranceDays: Double? = null,
     /** Row accent in the log, packed ARGB. */

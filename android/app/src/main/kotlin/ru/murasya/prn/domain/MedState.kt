@@ -80,9 +80,11 @@ fun nextWakeAt(states: List<MedState>): Long? = states.mapNotNull { it.remindAt 
 private fun alertKinds(state: MedState): List<AlertKind> =
     buildList {
         if (state.due) add(AlertKind.DUE)
-        when {
-            state.med.dosesLeft <= 0 -> add(AlertKind.OUT_OF_STOCK)
-            state.med.dosesLeft <= LOW_STOCK -> add(AlertKind.LOW_STOCK)
+        when (state.med.dosesLeft) {
+            null -> Unit
+            0 -> add(AlertKind.OUT_OF_STOCK)
+            in 1..LOW_STOCK -> add(AlertKind.LOW_STOCK)
+            else -> Unit
         }
     }
 

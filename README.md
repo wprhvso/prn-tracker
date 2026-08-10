@@ -22,7 +22,7 @@ Everything lives in two Room tables: a medication and the intakes that reference
 | Every N hours | yes | Reminder N hours after the *last logged dose*, never on a fixed clock |
 | Allowed hours | yes | Reminders are held back until the window opens |
 | Dose, mg | no | Shown on every row; also the unit the tolerance multiplier counts in |
-| Doses in stock | no | Warns at three left, again at zero; each logged dose spends one |
+| Doses in stock | yes | Warns at three left, again at zero; each logged dose spends one |
 | Tolerance, days | yes | Time constant of the tolerance multiplier |
 | Colour | no | The bar down the left of the log |
 
