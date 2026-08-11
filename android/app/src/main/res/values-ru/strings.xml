@@ -11,13 +11,12 @@
     <string name="alert_due">Пора принимать</string>
     <string name="alert_due_late">Можно было %1$s</string>
     <string name="alert_empty">Дозы закончились</string>
-    <string name="alert_tolerance">Толерантность ×%1$s</string>
+    <string name="tolerance_short">×%1$s</string>
     <string name="tolerance_reset">сброс через %1$s</string>
 
     <!-- Medication status -->
     <string name="status_ready">Можно</string>
     <string name="status_free">По необходимости</string>
-    <string name="status_last">приняли %1$s</string>
     <string name="dose_mg">%1$s мг</string>
     <string name="window_range">%1$s–%2$s</string>
 
@@ -29,8 +28,9 @@
     <string name="field_dose">Доза, мг</string>
     <string name="field_stock">Доз в запасе</string>
     <string name="field_interval">Раз в N часов</string>
-    <string name="field_window">Часы приёма</string>
-    <string name="field_tolerance">Толерантность, дней</string>
+    <string name="field_window">Часы</string>
+    <string name="field_tolerance_rise">Толер. рост, дн</string>
+    <string name="field_tolerance_fade">Толер. спад, дн</string>
     <string name="field_taken_at">Время приёма</string>
     <string name="window_from">С</string>
     <string name="window_to">До</string>
@@ -45,8 +45,7 @@
     <string name="action_keyboard">Ввести время</string>
     <string name="action_dial">Выбрать на циферблате</string>
     <string name="colour_hue">Тон</string>
-    <string name="colour_saturation">Насыщенность</string>
-    <string name="colour_brightness">Яркость</string>
+    <string name="colour_shade">Оттенок</string>
 
     <!-- Editor warnings -->
     <string name="warn_early">Следующая доза %1$s</string>

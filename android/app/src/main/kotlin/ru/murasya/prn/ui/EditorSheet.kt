@@ -118,47 +118,60 @@ private fun EditorFields(draft: MedDraft, zone: ZoneId, onChange: (MedDraft) -> 
             decimal = false,
         )
     }
+    IntervalAndWindowRow(draft, onChange)
+    if (draft.windowStartMinute != null && draft.windowEndMinute != null) WindowButtons(draft, onPick)
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        NumberField(
+            label = stringResource(R.string.field_tolerance_rise),
+            value = draft.toleranceRiseDays,
+            onValueChange = { onChange(draft.copy(toleranceRiseDays = it)) },
+            modifier = Modifier.weight(1f),
+        )
+        NumberField(
+            label = stringResource(R.string.field_tolerance_fade),
+            value = draft.toleranceDays,
+            onValueChange = { onChange(draft.copy(toleranceDays = it)) },
+            modifier = Modifier.weight(1f),
+        )
+    }
+    TimeButton(
+        label = stringResource(R.string.field_taken_at),
+        minuteOfDay = minuteOfDayOf(draft.takenAt, zone),
+        onClick = { onPick(TimeTarget.TAKEN) },
+        modifier = Modifier.fillMaxWidth(),
+    )
+    ColorPicker(selected = draft.colorArgb, onSelect = { onChange(draft.copy(colorArgb = it)) })
+}
+
+/**
+ * How often the drug may be taken, and whether reminders keep to certain hours — one row, because
+ * both answer the same question and the switch would waste a whole line on its own. The two times
+ * it unfolds into land directly underneath, where the switch that summoned them still reads as the
+ * heading.
+ */
+@Composable
+private fun IntervalAndWindowRow(draft: MedDraft, onChange: (MedDraft) -> Unit) {
+    val windowed = draft.windowStartMinute != null && draft.windowEndMinute != null
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
         NumberField(
             label = stringResource(R.string.field_interval),
             value = draft.intervalHours,
             onValueChange = { onChange(draft.copy(intervalHours = it)) },
             modifier = Modifier.weight(1f),
         )
-        NumberField(
-            label = stringResource(R.string.field_tolerance),
-            value = draft.toleranceDays,
-            onValueChange = { onChange(draft.copy(toleranceDays = it)) },
+        Row(
             modifier = Modifier.weight(1f),
-        )
-    }
-    TimeAndWindowRow(draft, zone, onChange, onPick)
-    if (draft.windowStartMinute != null && draft.windowEndMinute != null) WindowButtons(draft, onPick)
-    ColorPicker(selected = draft.colorArgb, onSelect = { onChange(draft.copy(colorArgb = it)) })
-}
-
-/** When the dose was taken, and whether reminders keep to a window — one row carries both. */
-@Composable
-private fun TimeAndWindowRow(
-    draft: MedDraft,
-    zone: ZoneId,
-    onChange: (MedDraft) -> Unit,
-    onPick: (TimeTarget) -> Unit,
-) {
-    val windowed = draft.windowStartMinute != null && draft.windowEndMinute != null
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        TimeButton(
-            label = stringResource(R.string.field_taken_at),
-            minuteOfDay = minuteOfDayOf(draft.takenAt, zone),
-            onClick = { onPick(TimeTarget.TAKEN) },
-        )
-        Spacer(Modifier.weight(1f))
-        Text(text = stringResource(R.string.field_window), style = MaterialTheme.typography.labelLarge)
-        Switch(checked = windowed, onCheckedChange = { onChange(draft.withWindow(it)) })
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(text = stringResource(R.string.field_window), style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.weight(1f))
+            Switch(checked = windowed, onCheckedChange = { onChange(draft.withWindow(it)) })
+        }
     }
 }
 

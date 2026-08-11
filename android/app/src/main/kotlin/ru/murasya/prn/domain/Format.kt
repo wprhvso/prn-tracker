@@ -5,6 +5,7 @@ import kotlin.math.abs
 import kotlin.math.roundToLong
 
 private const val CENTS = 100.0
+private const val TENTHS = 10.0
 
 /** Splits a duration into whole days, hours and minutes; the sign is dropped. */
 data class DurationParts(
@@ -30,8 +31,12 @@ fun formatNumber(value: Double): String {
     return if (text.endsWith('0')) text.dropLast(1) else text
 }
 
-/** The tolerance multiplier as it appears on screen, always with one decimal: `2.4`. */
-fun formatMultiplier(value: Double): String = String.format(Locale.getDefault(), "%.1f", value)
+/** The tolerance multiplier as it appears on screen: one decimal at most, so `2` and `2.4`. */
+fun formatMultiplier(value: Double): String {
+    val rounded = (value * TENTHS).roundToLong() / TENTHS
+    if (rounded == rounded.toLong().toDouble()) return rounded.toLong().toString()
+    return String.format(Locale.getDefault(), "%.1f", rounded)
+}
 
 /** Minutes since midnight as `09:30`. */
 fun formatMinuteOfDay(minute: Int): String =

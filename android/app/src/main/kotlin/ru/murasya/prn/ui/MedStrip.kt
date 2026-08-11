@@ -32,7 +32,6 @@ import ru.murasya.prn.data.Med
 import ru.murasya.prn.domain.DAY_MS
 import ru.murasya.prn.domain.MedState
 import ru.murasya.prn.domain.TOLERANCE_WARN
-import ru.murasya.prn.domain.daysToReset
 import ru.murasya.prn.domain.formatMultiplier
 import ru.murasya.prn.domain.formatNumber
 import ru.murasya.prn.text.relativeDuration
@@ -112,7 +111,7 @@ private fun statusText(state: MedState, now: Long): String {
     val dueAt = state.dueAt
     val last = state.lastTakenAt
     return when {
-        dueAt == null && last != null -> stringResource(R.string.status_last, relativeDuration(context, now, last))
+        dueAt == null && last != null -> relativeDuration(context, now, last)
         dueAt == null -> stringResource(R.string.status_free)
         state.due -> stringResource(R.string.status_ready)
         else -> relativeDuration(context, now, dueAt)
@@ -125,10 +124,10 @@ private fun metaText(state: MedState): String {
     val parts = mutableListOf(stringResource(R.string.dose_mg, formatNumber(state.med.doseMg)))
     val tolerance = state.tolerance
     if (tolerance != null) {
-        parts += stringResource(R.string.alert_tolerance, formatMultiplier(tolerance))
-        val reset = daysToReset(tolerance, state.med)?.takeIf { tolerance >= TOLERANCE_WARN }
-        if (reset != null) {
-            parts += stringResource(R.string.tolerance_reset, shortDuration(context, (reset * DAY_MS).toLong()))
+        parts += stringResource(R.string.tolerance_short, formatMultiplier(tolerance.level))
+        if (tolerance.level >= TOLERANCE_WARN) {
+            val off = shortDuration(context, (tolerance.resetDays * DAY_MS).toLong())
+            parts += stringResource(R.string.tolerance_reset, off)
         }
     }
     val left = state.med.dosesLeft

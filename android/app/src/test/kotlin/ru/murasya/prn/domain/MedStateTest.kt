@@ -124,7 +124,7 @@ class MedStateTest {
         val subject = med(intervalHours = null, toleranceDays = 14.0)
         val doses = listOf(intake(1, now, id = 1), intake(1, now, id = 2), intake(1, now, id = 3))
         val state = single(subject, doses, now)
-        assertEquals(3.0, state.tolerance ?: 0.0, 1e-6)
+        assertEquals(3.0, state.tolerance?.level ?: 0.0, 1e-6)
         assertEquals(emptyList<AlertKind>(), alerts(listOf(state)).map { it.kind })
     }
 
@@ -147,5 +147,36 @@ class MedStateTest {
                 ZONE,
             )
         assertEquals(listOf(AlertKind.OUT_OF_STOCK, AlertKind.DUE), alerts(states).map { it.kind })
+    }
+
+    /**
+     * The screen is ordered by how soon something needs a decision. A drug with no schedule can
+     * never be late, so however recently it was taken it comes after one that is nearly due.
+     */
+    @Test
+    fun theMostUrgentMedicationComesFirst() {
+        val now = moment(12)
+        val doses = listOf(intake(1, moment(9)), intake(2, moment(7)), intake(3, moment(11, 59)))
+        val meds = listOf(med(id = 3, intervalHours = null), med(id = 2), med(id = 1, intervalHours = 1.0))
+        assertEquals(listOf(1L, 2L, 3L), medStates(meds, doses, now, ZONE).map { it.med.id })
+    }
+
+    @Test
+    fun amongDueMedicationsTheLongestWaitLeads() {
+        val now = moment(20)
+        val doses = listOf(intake(1, moment(10)), intake(2, moment(6)))
+        val states = medStates(listOf(med(id = 1), med(id = 2)), doses, now, ZONE)
+        assertEquals(listOf(2L, 1L), states.map { it.med.id })
+        assertEquals(listOf(2L, 1L), alerts(states).map { it.state.med.id })
+    }
+
+    /** A dose that is allowed but out of hours still outranks one that is not allowed yet. */
+    @Test
+    fun aDoseOutsideItsHoursStillBeatsOneThatIsNotDue() {
+        val now = moment(23)
+        val hushed = med(id = 1, windowStartMinute = 540, windowEndMinute = 1320)
+        val doses = listOf(intake(1, moment(14)), intake(2, moment(22)))
+        val states = medStates(listOf(med(id = 2), hushed), doses, now, ZONE)
+        assertEquals(listOf(1L, 2L), states.map { it.med.id })
     }
 }
