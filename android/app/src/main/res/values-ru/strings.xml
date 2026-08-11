@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Log screen -->
+    <string name="log_empty_title">Пока пусто</string>
+    <string name="log_empty_text">Нажмите +, чтобы добавить первый препарат</string>
+    <string name="day_today">Сегодня</string>
+    <string name="day_yesterday">Вчера</string>
+
+    <!-- Alerts -->
+    <string name="alert_due">Пора принимать</string>
+    <string name="alert_due_late">Можно было %1$s</string>
+    <string name="alert_empty">Дозы закончились</string>
+    <string name="alert_tolerance">Толерантность ×%1$s</string>
+    <string name="tolerance_reset">сброс через %1$s</string>
+
+    <!-- Medication status -->
+    <string name="status_ready">Можно</string>
+    <string name="status_next">Следующая %1$s</string>
+    <string name="status_free">По необходимости</string>
+    <string name="status_last">Последняя %1$s</string>
+    <string name="dose_mg">%1$s мг</string>
+    <string name="window_range">%1$s–%2$s</string>
+
+    <!-- Editor -->
+    <string name="editor_new">Новый препарат</string>
+    <string name="editor_take">Принять ещё раз</string>
+    <string name="editor_edit">Изменить препарат</string>
+    <string name="field_name">Название</string>
+    <string name="field_dose">Доза, мг</string>
+    <string name="field_stock">Доз в запасе</string>
+    <string name="field_interval">Раз в N часов</string>
+    <string name="field_interval_hint">Напомнить через столько часов после приёма</string>
+    <string name="field_window">Часы приёма</string>
+    <string name="field_window_hint">Напоминать только внутри этого диапазона</string>
+    <string name="field_tolerance">Толерантность, дней</string>
+    <string name="field_tolerance_hint">За сколько дней сходит толерантность от одной дозы</string>
+    <string name="field_color">Цвет в логе</string>
+    <string name="field_taken_at">Время приёма</string>
+    <string name="window_from">С</string>
+    <string name="window_to">До</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_take">Принять</string>
+    <string name="action_delete">Удалить</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_undo">Вернуть</string>
+    <string name="action_add">Добавить</string>
+    <string name="action_ok">Понятно</string>
+
+    <!-- Editor warnings -->
+    <string name="warn_early">Следующая доза %1$s</string>
+    <string name="warn_window">Вне разрешённого диапазона %1$s</string>
+    <string name="warn_stock">Доз в запасе не осталось</string>
+    <string name="warn_tolerance">Толерантность ×%1$s — перерыв %2$s её сбросит</string>
+    <string name="warn_tolerance_after">После этой дозы толерантность ×%1$s — сбросит перерыв %2$s</string>
+
+    <!-- Delete confirmation -->
+    <string name="delete_title">Удалить «%1$s»?</string>
+    <string name="delete_text">Препарат и весь его лог будут удалены.</string>
+    <string name="delete_entry_title">Удалить эту запись?</string>
+    <string name="delete_entry_text">Доза вернётся в запас.</string>
+
+    <!-- Permissions -->
+    <string name="perm_notifications_title">Уведомления выключены</string>
+    <string name="perm_notifications_text">Без них напоминания не придут</string>
+    <string name="perm_notifications_action">Разрешить</string>
+    <string name="perm_alarms_title">Точные будильники выключены</string>
+    <string name="perm_alarms_text">Напоминания могут опаздывать</string>
+    <string name="perm_alarms_action">Настройки</string>
+
+    <!-- Notifications -->
+    <string name="channel_dose">Приёмы</string>
+    <string name="channel_dose_desc">Напоминания, что можно принять следующую дозу</string>
+    <string name="channel_stock">Запас</string>
+    <string name="channel_stock_desc">Предупреждения о том, что дозы кончаются</string>
+    <string name="notify_due_title">%1$s — пора</string>
+    <string name="notify_due_text">%1$s мг · прошлая доза %2$s назад</string>
+    <string name="notify_due_text_plain">%1$s мг</string>
+    <string name="notify_low_title">%1$s кончается</string>
+    <string name="notify_empty_title">%1$s кончился</string>
+    <string name="notify_empty_text">Доз не осталось</string>
+
+    <!-- Snackbars -->
+    <string name="snack_taken">%1$s — записано</string>
+
+    <!-- Durations -->
+    <string name="dur_days_hours">%1$d д %2$d ч</string>
+    <string name="dur_hours_minutes">%1$d ч %2$d мин</string>
+    <string name="dur_minutes">%1$d мин</string>
+    <string name="dur_now">сейчас</string>
+    <string name="time_in">через %1$s</string>
+    <string name="time_ago">%1$s назад</string>
+
+    <plurals name="doses_left">
+        <item quantity="one">осталась %1$d доза</item>
+        <item quantity="few">осталось %1$d дозы</item>
+        <item quantity="many">осталось %1$d доз</item>
+        <item quantity="other">осталось %1$d дозы</item>
+    </plurals>
+
+</resources>

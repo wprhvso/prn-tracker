@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      The activity theme only has to cover the instant before Compose paints: it supplies the
+      window background behind the splash and nothing else. Day and night come from the colour
+      resource rather than from a DayNight parent, because the platform has no no-action-bar
+      DayNight theme to inherit from.
+    -->
+    <style name="Theme.PrnTracker" parent="@android:style/Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+
+</resources>

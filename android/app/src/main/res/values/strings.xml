@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">PRN Tracker</string>
+
+    <!-- Log screen -->
+    <string name="log_empty_title">Nothing logged yet</string>
+    <string name="log_empty_text">Tap + to add the first medication</string>
+    <string name="day_today">Today</string>
+    <string name="day_yesterday">Yesterday</string>
+
+    <!-- Alerts -->
+    <string name="alert_due">Time to take it</string>
+    <string name="alert_due_late">Due %1$s</string>
+    <string name="alert_empty">Out of doses</string>
+    <string name="alert_tolerance">Tolerance ×%1$s</string>
+    <string name="tolerance_reset">reset in %1$s</string>
+
+    <!-- Medication status -->
+    <string name="status_ready">Ready</string>
+    <string name="status_next">Next %1$s</string>
+    <string name="status_free">As needed</string>
+    <string name="status_last">Last %1$s</string>
+    <string name="dose_mg">%1$s mg</string>
+    <string name="window_range">%1$s–%2$s</string>
+
+    <!-- Editor -->
+    <string name="editor_new">New medication</string>
+    <string name="editor_take">Take again</string>
+    <string name="editor_edit">Edit medication</string>
+    <string name="field_name">Name</string>
+    <string name="field_dose">Dose, mg</string>
+    <string name="field_stock">Doses in stock</string>
+    <string name="field_interval">Every N hours</string>
+    <string name="field_interval_hint">Remind me this long after the last dose</string>
+    <string name="field_window">Allowed hours</string>
+    <string name="field_window_hint">Remind me only inside this window</string>
+    <string name="field_tolerance">Tolerance, days</string>
+    <string name="field_tolerance_hint">Days for one dose worth of tolerance to fade</string>
+    <string name="field_color">Colour in the log</string>
+    <string name="field_taken_at">Taken at</string>
+    <string name="window_from">From</string>
+    <string name="window_to">To</string>
+    <string name="action_save">Save</string>
+    <string name="action_take">Take</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_add">Add</string>
+    <string name="action_ok">Got it</string>
+
+    <!-- Editor warnings -->
+    <string name="warn_early">Next dose is due %1$s</string>
+    <string name="warn_window">Outside the allowed window %1$s</string>
+    <string name="warn_stock">No doses left in stock</string>
+    <string name="warn_tolerance">Tolerance ×%1$s — %2$s off would reset it</string>
+    <string name="warn_tolerance_after">×%1$s tolerance after this dose — %2$s off would reset it</string>
+
+    <!-- Delete confirmation -->
+    <string name="delete_title">Delete %1$s?</string>
+    <string name="delete_text">The medication and its whole log are removed.</string>
+    <string name="delete_entry_title">Delete this entry?</string>
+    <string name="delete_entry_text">The dose goes back into stock.</string>
+
+    <!-- Permissions -->
+    <string name="perm_notifications_title">Notifications are off</string>
+    <string name="perm_notifications_text">Reminders stay silent until you allow them</string>
+    <string name="perm_notifications_action">Allow</string>
+    <string name="perm_alarms_title">Exact alarms are off</string>
+    <string name="perm_alarms_text">Reminders may arrive late</string>
+    <string name="perm_alarms_action">Settings</string>
+
+    <!-- Notifications -->
+    <string name="channel_dose">Doses</string>
+    <string name="channel_dose_desc">Reminders that the next dose is allowed</string>
+    <string name="channel_stock">Stock</string>
+    <string name="channel_stock_desc">Warnings about running out of doses</string>
+    <string name="notify_due_title">%1$s — time to take</string>
+    <string name="notify_due_text">%1$s mg · last dose %2$s ago</string>
+    <string name="notify_due_text_plain">%1$s mg</string>
+    <string name="notify_low_title">%1$s is running out</string>
+    <string name="notify_empty_title">%1$s has run out</string>
+    <string name="notify_empty_text">No doses left</string>
+
+    <!-- Snackbars -->
+    <string name="snack_taken">%1$s logged</string>
+
+    <!-- Durations -->
+    <string name="dur_days_hours">%1$dd %2$dh</string>
+    <string name="dur_hours_minutes">%1$dh %2$dm</string>
+    <string name="dur_minutes">%1$dm</string>
+    <string name="dur_now">now</string>
+    <string name="time_in">in %1$s</string>
+    <string name="time_ago">%1$s ago</string>
+
+    <plurals name="doses_left">
+        <item quantity="one">%1$d dose left</item>
+        <item quantity="other">%1$d doses left</item>
+    </plurals>
+
+</resources>
