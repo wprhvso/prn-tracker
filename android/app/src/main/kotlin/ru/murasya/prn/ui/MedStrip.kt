@@ -29,18 +29,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ru.murasya.prn.R
 import ru.murasya.prn.data.Med
-import ru.murasya.prn.domain.DAY_MS
 import ru.murasya.prn.domain.MedState
-import ru.murasya.prn.domain.TOLERANCE_WARN
-import ru.murasya.prn.domain.formatMultiplier
 import ru.murasya.prn.domain.formatNumber
 import ru.murasya.prn.text.relativeDuration
-import ru.murasya.prn.text.shortDuration
 
 private const val DUE_TINT = 0.22f
 
-/** A compact always-on read of every medication: when the next dose is allowed, how deep the
- * tolerance is, how much is left. Tapping one is the fastest way to log another dose. */
+/** A compact always-on read of every medication: when the next dose is allowed and how much is
+ * left. Tapping one is the fastest way to log another dose. */
 @Composable
 fun MedStrip(states: List<MedState>, now: Long, onTake: (Med) -> Unit, onEdit: (Med) -> Unit) {
     LazyRow(
@@ -120,17 +116,7 @@ private fun statusText(state: MedState, now: Long): String {
 
 @Composable
 private fun metaText(state: MedState): String {
-    val context = LocalContext.current
-    val parts = mutableListOf(stringResource(R.string.dose_mg, formatNumber(state.med.doseMg)))
-    val tolerance = state.tolerance
-    if (tolerance != null) {
-        parts += stringResource(R.string.tolerance_short, formatMultiplier(tolerance.level))
-        if (tolerance.level >= TOLERANCE_WARN) {
-            val off = shortDuration(context, (tolerance.resetDays * DAY_MS).toLong())
-            parts += stringResource(R.string.tolerance_reset, off)
-        }
-    }
-    val left = state.med.dosesLeft
-    if (left != null) parts += pluralStringResource(R.plurals.doses_short, left, left)
-    return parts.joinToString("  ·  ")
+    val dose = stringResource(R.string.dose_mg, formatNumber(state.med.doseMg))
+    val left = state.med.dosesLeft ?: return dose
+    return "$dose  ·  ${pluralStringResource(R.plurals.doses_short, left, left)}"
 }

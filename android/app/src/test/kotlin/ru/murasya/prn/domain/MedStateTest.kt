@@ -19,7 +19,6 @@ private fun med(
     id: Long = 1,
     intervalHours: Double? = 6.0,
     dosesLeft: Int? = 10,
-    toleranceDays: Double? = null,
     windowStartMinute: Int? = null,
     windowEndMinute: Int? = null,
 ) = Med(
@@ -30,7 +29,6 @@ private fun med(
     windowEndMinute = windowEndMinute,
     doseMg = 100.0,
     dosesLeft = dosesLeft,
-    toleranceDays = toleranceDays,
     colorArgb = 0,
     createdAt = moment(0),
 )
@@ -115,17 +113,6 @@ class MedStateTest {
         assertEquals(listOf(AlertKind.LOW_STOCK), alerts(low).map { it.kind })
         assertEquals(listOf(AlertKind.OUT_OF_STOCK), alerts(empty).map { it.kind })
         assertEquals(emptyList<AlertKind>(), alerts(untracked).map { it.kind })
-    }
-
-    /** Tolerance is a state, not an event: it must never be able to reach the notification shade. */
-    @Test
-    fun toleranceIsMeasuredButNeverAlerted() {
-        val now = moment(12)
-        val subject = med(intervalHours = null, toleranceDays = 14.0)
-        val doses = listOf(intake(1, now, id = 1), intake(1, now, id = 2), intake(1, now, id = 3))
-        val state = single(subject, doses, now)
-        assertEquals(3.0, state.tolerance?.level ?: 0.0, 1e-6)
-        assertEquals(emptyList<AlertKind>(), alerts(listOf(state)).map { it.kind })
     }
 
     @Test

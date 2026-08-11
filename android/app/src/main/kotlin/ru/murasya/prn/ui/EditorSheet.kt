@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import java.time.ZoneId
 import ru.murasya.prn.R
@@ -86,7 +87,7 @@ private fun EditorForm(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(text = titleOf(editor.mode), style = MaterialTheme.typography.titleLarge)
-        EditorWarnings(medState, draft, editor.mode, now, zone)
+        EditorWarnings(medState, draft, now, zone)
         EditorFields(draft, zone, onDraftChange) { picking = it }
         EditorButtons(editor.mode, draft.valid, onCommit) { confirmingDelete = true }
     }
@@ -120,20 +121,6 @@ private fun EditorFields(draft: MedDraft, zone: ZoneId, onChange: (MedDraft) -> 
     }
     IntervalAndWindowRow(draft, onChange)
     if (draft.windowStartMinute != null && draft.windowEndMinute != null) WindowButtons(draft, onPick)
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        NumberField(
-            label = stringResource(R.string.field_tolerance_rise),
-            value = draft.toleranceRiseDays,
-            onValueChange = { onChange(draft.copy(toleranceRiseDays = it)) },
-            modifier = Modifier.weight(1f),
-        )
-        NumberField(
-            label = stringResource(R.string.field_tolerance_fade),
-            value = draft.toleranceDays,
-            onValueChange = { onChange(draft.copy(toleranceDays = it)) },
-            modifier = Modifier.weight(1f),
-        )
-    }
     TimeButton(
         label = stringResource(R.string.field_taken_at),
         minuteOfDay = minuteOfDayOf(draft.takenAt, zone),
@@ -168,8 +155,14 @@ private fun IntervalAndWindowRow(draft: MedDraft, onChange: (MedDraft) -> Unit) 
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Text(text = stringResource(R.string.field_window), style = MaterialTheme.typography.labelLarge)
-            Spacer(Modifier.weight(1f))
+            // The switch keeps the right edge, so the label centres in whatever is left rather than
+            // clinging to the far side of a gap.
+            Text(
+                text = stringResource(R.string.field_window),
+                style = MaterialTheme.typography.labelLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f),
+            )
             Switch(checked = windowed, onCheckedChange = { onChange(draft.withWindow(it)) })
         }
     }

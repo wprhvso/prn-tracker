@@ -9,7 +9,7 @@ import androidx.room3.PrimaryKey
  *
  * Every optional field switches off the feature that depends on it: no [intervalHours] means no
  * "time for the next dose" reminder, no window means the reminder may fire at any hour, no
- * [toleranceDays] means no tolerance multiplier is shown.
+ * [dosesLeft] means stock is not being counted.
  */
 @Entity(tableName = "med")
 data class Med(
@@ -27,10 +27,6 @@ data class Med(
     val doseMg: Double = 0.0,
     /** How many doses are left in stock, or null when stock is not being tracked. */
     val dosesLeft: Int? = null,
-    /** Days it takes for a single dose worth of tolerance to wear off. */
-    val toleranceDays: Double? = null,
-    /** Days a dose takes to build its tolerance up. Null means it lands at full strength at once. */
-    val toleranceRiseDays: Double? = null,
     /** Row accent in the log, packed ARGB. */
     @ColumnInfo(name = "color")
     val colorArgb: Int,

@@ -18,14 +18,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import java.time.ZoneId
 import ru.murasya.prn.R
-import ru.murasya.prn.domain.DAY_MS
 import ru.murasya.prn.domain.MedState
-import ru.murasya.prn.domain.TOLERANCE_WARN
 import ru.murasya.prn.domain.formatMinuteOfDay
-import ru.murasya.prn.domain.formatMultiplier
 import ru.murasya.prn.domain.inWindow
 import ru.murasya.prn.text.relativeDuration
-import ru.murasya.prn.text.shortDuration
 
 /**
  * The warnings live here rather than in the notification shade on purpose: they only matter at the
@@ -33,10 +29,9 @@ import ru.murasya.prn.text.shortDuration
  * already stopped.
  */
 @Composable
-fun EditorWarnings(state: MedState?, draft: MedDraft, mode: EditorMode, now: Long, zone: ZoneId) {
+fun EditorWarnings(state: MedState?, draft: MedDraft, now: Long, zone: ZoneId) {
     val warnings =
         listOfNotNull(
-            toleranceWarning(state, draft, mode),
             earlyWarning(state, now),
             windowWarning(draft, now, zone),
             stockWarning(draft),
@@ -68,36 +63,6 @@ private fun WarningLine(text: String) {
         Icon(painterResource(R.drawable.ic_warning), contentDescription = null, modifier = Modifier.size(20.dp))
         Text(text = text, style = MaterialTheme.typography.bodyMedium)
     }
-}
-
-/**
- * Shows where this dose *lands*, not where the user already is: at the moment of deciding, the
- * number that matters is the one they are about to create.
- */
-@Composable
-private fun toleranceWarning(state: MedState?, draft: MedDraft, mode: EditorMode): String? {
-    val context = LocalContext.current
-    val med = state?.med ?: return null
-    val carried = state.tolerance ?: return null
-    val adding = if (mode == EditorMode.EDIT) 0.0 else doseWeight(draft, med.doseMg)
-    val projected = carried.plus(adding)
-    // A dose about to be taken is judged by where it lands, which with a rise time is a little
-    // later than this instant; one already on the books is judged by where it has actually got to.
-    val level = if (adding > 0.0) projected.peak else projected.level
-    if (level < TOLERANCE_WARN) return null
-    val off = shortDuration(context, (projected.resetDays * DAY_MS).toLong())
-    val shown = formatMultiplier(level)
-    return if (adding > 0.0) {
-        stringResource(R.string.warn_tolerance_after, shown, off)
-    } else {
-        stringResource(R.string.warn_tolerance, shown, off)
-    }
-}
-
-/** How many reference doses this one is worth, so a double dose warns like two. */
-private fun doseWeight(draft: MedDraft, reference: Double): Double {
-    val unit = if (reference > 0.0) reference else 1.0
-    return (draft.doseMg.toPositiveDouble() ?: reference) / unit
 }
 
 @Composable
