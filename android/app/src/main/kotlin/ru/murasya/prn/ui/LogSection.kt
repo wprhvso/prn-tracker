@@ -139,7 +139,7 @@ private fun EntryText(entry: LogEntry, modifier: Modifier = Modifier) {
 private fun entryDetail(entry: LogEntry): String {
     val dose = stringResource(R.string.dose_mg, formatNumber(entry.intake.doseMg))
     val tolerance = entry.tolerance ?: return dose
-    return "$dose  ·  ${stringResource(R.string.alert_tolerance, formatMultiplier(tolerance))}"
+    return "$dose  ·  ${stringResource(R.string.tolerance_short, formatMultiplier(tolerance))}"
 }
 
 /**

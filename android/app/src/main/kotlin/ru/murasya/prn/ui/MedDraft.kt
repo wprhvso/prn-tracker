@@ -19,6 +19,7 @@ data class MedDraft(
     val dosesLeft: String = "",
     val intervalHours: String = "",
     val toleranceDays: String = "",
+    val toleranceRiseDays: String = "",
     val windowStartMinute: Int? = null,
     val windowEndMinute: Int? = null,
     val colorArgb: Int = 0,
@@ -37,6 +38,7 @@ fun draftOf(med: Med, intake: Intake?, now: Long): MedDraft =
         dosesLeft = med.dosesLeft?.toString().orEmpty(),
         intervalHours = med.intervalHours?.let(::formatNumber).orEmpty(),
         toleranceDays = med.toleranceDays?.let(::formatNumber).orEmpty(),
+        toleranceRiseDays = med.toleranceRiseDays?.let(::formatNumber).orEmpty(),
         windowStartMinute = med.windowStartMinute,
         windowEndMinute = med.windowEndMinute,
         colorArgb = med.colorArgb,
@@ -54,6 +56,7 @@ fun MedDraft.toMed(): Med =
         doseMg = doseMg.toPositiveDouble() ?: 0.0,
         dosesLeft = dosesLeft.trim().toIntOrNull()?.coerceAtLeast(0),
         toleranceDays = toleranceDays.toPositiveDouble(),
+        toleranceRiseDays = toleranceRiseDays.toPositiveDouble(),
         colorArgb = colorArgb,
         createdAt = if (createdAt > 0) createdAt else takenAt,
     )

@@ -24,6 +24,17 @@ class FormatTest {
         assertEquals("0.25", formatNumber(0.25))
     }
 
+    /** The multiplier is a glance, not a measurement: one decimal, and none at all when it is whole. */
+    @Test
+    fun multipliersKeepOneDecimalAtMost() {
+        assertEquals("2", formatMultiplier(2.0))
+        assertEquals("2", formatMultiplier(1.98))
+        assertEquals("2.4", formatMultiplier(2.44))
+        assertEquals("2.5", formatMultiplier(2.45))
+        assertEquals("0", formatMultiplier(0.04))
+        assertEquals("12.3", formatMultiplier(12.34))
+    }
+
     @Test
     fun minutesOfDayReadAsAClock() {
         assertEquals("00:00", formatMinuteOfDay(0))

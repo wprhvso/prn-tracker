@@ -21,7 +21,6 @@ import ru.murasya.prn.R
 import ru.murasya.prn.domain.DAY_MS
 import ru.murasya.prn.domain.MedState
 import ru.murasya.prn.domain.TOLERANCE_WARN
-import ru.murasya.prn.domain.daysToReset
 import ru.murasya.prn.domain.formatMinuteOfDay
 import ru.murasya.prn.domain.formatMultiplier
 import ru.murasya.prn.domain.inWindow
@@ -81,11 +80,13 @@ private fun toleranceWarning(state: MedState?, draft: MedDraft, mode: EditorMode
     val med = state?.med ?: return null
     val carried = state.tolerance ?: return null
     val adding = if (mode == EditorMode.EDIT) 0.0 else doseWeight(draft, med.doseMg)
-    val projected = carried + adding
-    if (projected < TOLERANCE_WARN) return null
-    val reset = daysToReset(projected, med) ?: return null
-    val off = shortDuration(context, (reset * DAY_MS).toLong())
-    val shown = formatMultiplier(projected)
+    val projected = carried.plus(adding)
+    // A dose about to be taken is judged by where it lands, which with a rise time is a little
+    // later than this instant; one already on the books is judged by where it has actually got to.
+    val level = if (adding > 0.0) projected.peak else projected.level
+    if (level < TOLERANCE_WARN) return null
+    val off = shortDuration(context, (projected.resetDays * DAY_MS).toLong())
+    val shown = formatMultiplier(level)
     return if (adding > 0.0) {
         stringResource(R.string.warn_tolerance_after, shown, off)
     } else {

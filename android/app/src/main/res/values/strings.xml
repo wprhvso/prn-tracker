@@ -13,13 +13,12 @@
     <string name="alert_due">Time to take it</string>
     <string name="alert_due_late">Due %1$s</string>
     <string name="alert_empty">Out of doses</string>
-    <string name="alert_tolerance">Tolerance ×%1$s</string>
+    <string name="tolerance_short">×%1$s</string>
     <string name="tolerance_reset">reset in %1$s</string>
 
     <!-- Medication status -->
     <string name="status_ready">Ready</string>
     <string name="status_free">As needed</string>
-    <string name="status_last">last %1$s</string>
     <string name="dose_mg">%1$s mg</string>
     <string name="window_range">%1$s–%2$s</string>
 
@@ -31,8 +30,9 @@
     <string name="field_dose">Dose, mg</string>
     <string name="field_stock">Doses in stock</string>
     <string name="field_interval">Every N hours</string>
-    <string name="field_window">Allowed hours</string>
-    <string name="field_tolerance">Tolerance, days</string>
+    <string name="field_window">Window</string>
+    <string name="field_tolerance_rise">Tol. rise, days</string>
+    <string name="field_tolerance_fade">Tol. fade, days</string>
     <string name="field_taken_at">Taken at</string>
     <string name="window_from">From</string>
     <string name="window_to">To</string>
@@ -47,8 +47,7 @@
     <string name="action_keyboard">Type the time</string>
     <string name="action_dial">Pick on the dial</string>
     <string name="colour_hue">Hue</string>
-    <string name="colour_saturation">Saturation</string>
-    <string name="colour_brightness">Brightness</string>
+    <string name="colour_shade">Shade</string>
 
     <!-- Editor warnings -->
     <string name="warn_early">Next dose is due %1$s</string>

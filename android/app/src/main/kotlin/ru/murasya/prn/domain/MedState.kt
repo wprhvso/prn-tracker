@@ -41,9 +41,19 @@ data class MedState(
     val dueAt: Long?,
     val due: Boolean,
     val windowOpen: Boolean,
-    val tolerance: Double?,
+    val tolerance: Tolerance?,
     val remindAt: Long?,
 )
+
+/**
+ * How a medication earns its place at the front of the screen.
+ *
+ * Nothing here is about the drug's importance — only about how soon it needs a decision. A dose
+ * that can be taken this second outranks one that becomes allowed in a minute, which outranks a
+ * drug with no schedule at all: that last group can never be late, so however recently it was
+ * taken, it is history rather than news.
+ */
+private enum class Urgency { READY, READY_LATER, SCHEDULED, FREE }
 
 enum class AlertKind {
     OUT_OF_STOCK,
@@ -56,15 +66,19 @@ data class Alert(
     val state: MedState,
 )
 
+/** Every medication's standing, most urgent first — the order everything downstream inherits. */
 fun medStates(meds: List<Med>, intakes: List<Intake>, now: Long, zone: ZoneId): List<MedState> {
     val lastTaken = intakes.groupBy { it.medId }.mapValues { (_, own) -> own.maxOf { it.takenAt } }
-    return meds.map { med -> medState(med, lastTaken[med.id], intakes, now, zone) }
+    return meds
+        .map { med -> medState(med, lastTaken[med.id], intakes, now, zone) }
+        .sortedWith(compareBy<MedState>({ urgencyOf(it) }, { waitOf(it) }, { it.med.name.lowercase() }))
 }
 
+/** Alerts keep the states' own order inside each kind, because [sortedBy] is a stable sort. */
 fun alerts(states: List<MedState>): List<Alert> =
     states
         .flatMap { state -> alertKinds(state).map { kind -> Alert(kind, state) } }
-        .sortedWith(compareBy({ it.kind.ordinal }, { it.state.med.name }))
+        .sortedBy { it.kind.ordinal }
 
 /**
  * The subset worth waking someone for. A dose that is allowed but outside its hours stays on
@@ -76,6 +90,22 @@ fun notifiableAlerts(states: List<MedState>): List<Alert> =
 
 /** The earliest moment any medication needs the app woken up again. */
 fun nextWakeAt(states: List<MedState>): Long? = states.mapNotNull { it.remindAt }.minOrNull()
+
+private fun urgencyOf(state: MedState): Urgency =
+    when {
+        state.due && state.windowOpen -> Urgency.READY
+        state.due -> Urgency.READY_LATER
+        state.dueAt != null -> Urgency.SCHEDULED
+        else -> Urgency.FREE
+    }
+
+/**
+ * The tie-break inside one band, always "smaller is more urgent". Anything on a schedule sorts by
+ * the moment it comes up, so the longest overdue leads the ready ones and the soonest leads the
+ * waiting ones. Anything without a schedule sorts by its last dose, most recent first, which is
+ * the only sense in which one of them can be more current than another.
+ */
+private fun waitOf(state: MedState): Long = state.dueAt ?: -(state.lastTakenAt ?: 0L)
 
 private fun alertKinds(state: MedState): List<AlertKind> =
     buildList {
