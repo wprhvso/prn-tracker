@@ -3,6 +3,7 @@ package ru.murasya.prn.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -39,6 +40,9 @@ private enum class TimeTarget { NONE, TAKEN, WINDOW_START, WINDOW_END }
 /**
  * The one place anything is created or changed. It opens blank from the plus button, pre-filled
  * from a tap, and pre-filled with the intake itself from a long press.
+ *
+ * The form is laid out to fit without scrolling: paired fields share a row, the hint under every
+ * field is gone now that the labels say the same thing, and the colour sliders stay folded away.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,12 +80,12 @@ private fun EditorForm(
             Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp)
+                .padding(bottom = 20.dp)
                 .navigationBarsPadding()
                 .imePadding(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = titleOf(editor.mode), style = MaterialTheme.typography.headlineSmall)
+        Text(text = titleOf(editor.mode), style = MaterialTheme.typography.titleLarge)
         EditorWarnings(medState, draft, editor.mode, now, zone)
         EditorFields(draft, zone, onDraftChange) { picking = it }
         EditorButtons(editor.mode, draft.valid, onCommit) { confirmingDelete = true }
@@ -114,62 +118,47 @@ private fun EditorFields(draft: MedDraft, zone: ZoneId, onChange: (MedDraft) -> 
             decimal = false,
         )
     }
-    FieldLabel(stringResource(R.string.field_color))
-    ColorPicker(selected = draft.colorArgb, onSelect = { onChange(draft.copy(colorArgb = it)) })
-    TimeButton(
-        label = stringResource(R.string.field_taken_at),
-        minuteOfDay = minuteOfDayOf(draft.takenAt, zone),
-        onClick = { onPick(TimeTarget.TAKEN) },
-    )
-    NumberField(
-        label = stringResource(R.string.field_interval),
-        value = draft.intervalHours,
-        onValueChange = { onChange(draft.copy(intervalHours = it)) },
-        supporting = stringResource(R.string.field_interval_hint),
-    )
-    WindowFields(draft, onChange, onPick)
-    NumberField(
-        label = stringResource(R.string.field_tolerance),
-        value = draft.toleranceDays,
-        onValueChange = { onChange(draft.copy(toleranceDays = it)) },
-        supporting = stringResource(R.string.field_tolerance_hint),
-    )
-}
-
-@Composable
-private fun WindowFields(draft: MedDraft, onChange: (MedDraft) -> Unit, onPick: (TimeTarget) -> Unit) {
-    val on = draft.windowStartMinute != null && draft.windowEndMinute != null
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            WindowLabel()
-            Switch(checked = on, onCheckedChange = { onChange(draft.withWindow(it)) })
-        }
-        if (on) WindowButtons(draft, onPick)
-    }
-}
-
-@Composable
-private fun FieldLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(bottom = 2.dp),
-    )
-}
-
-@Composable
-private fun WindowLabel() {
-    Column {
-        Text(text = stringResource(R.string.field_window), style = MaterialTheme.typography.titleMedium)
-        Text(
-            text = stringResource(R.string.field_window_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        NumberField(
+            label = stringResource(R.string.field_interval),
+            value = draft.intervalHours,
+            onValueChange = { onChange(draft.copy(intervalHours = it)) },
+            modifier = Modifier.weight(1f),
         )
+        NumberField(
+            label = stringResource(R.string.field_tolerance),
+            value = draft.toleranceDays,
+            onValueChange = { onChange(draft.copy(toleranceDays = it)) },
+            modifier = Modifier.weight(1f),
+        )
+    }
+    TimeAndWindowRow(draft, zone, onChange, onPick)
+    if (draft.windowStartMinute != null && draft.windowEndMinute != null) WindowButtons(draft, onPick)
+    ColorPicker(selected = draft.colorArgb, onSelect = { onChange(draft.copy(colorArgb = it)) })
+}
+
+/** When the dose was taken, and whether reminders keep to a window — one row carries both. */
+@Composable
+private fun TimeAndWindowRow(
+    draft: MedDraft,
+    zone: ZoneId,
+    onChange: (MedDraft) -> Unit,
+    onPick: (TimeTarget) -> Unit,
+) {
+    val windowed = draft.windowStartMinute != null && draft.windowEndMinute != null
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        TimeButton(
+            label = stringResource(R.string.field_taken_at),
+            minuteOfDay = minuteOfDayOf(draft.takenAt, zone),
+            onClick = { onPick(TimeTarget.TAKEN) },
+        )
+        Spacer(Modifier.weight(1f))
+        Text(text = stringResource(R.string.field_window), style = MaterialTheme.typography.labelLarge)
+        Switch(checked = windowed, onCheckedChange = { onChange(draft.withWindow(it)) })
     }
 }
 
@@ -201,11 +190,7 @@ private fun EditorButtons(mode: EditorMode, valid: Boolean, onCommit: () -> Unit
         if (mode == EditorMode.EDIT) {
             TextButton(onClick = onDelete) { Text(stringResource(R.string.action_delete)) }
         }
-        Button(
-            onClick = onCommit,
-            enabled = valid,
-            modifier = Modifier.weight(1f),
-        ) {
+        Button(onClick = onCommit, enabled = valid, modifier = Modifier.weight(1f)) {
             Text(stringResource(commitLabelOf(mode)))
         }
     }
@@ -228,6 +213,7 @@ private fun TimePickers(
             else -> draft.windowEndMinute ?: DEFAULT_WINDOW_END
         }
     PrnTimePickerDialog(
+        title = stringResource(labelOf(target)),
         initialMinuteOfDay = initial,
         onDismiss = onClose,
         onConfirm = { minute ->
@@ -285,6 +271,13 @@ private fun titleOf(mode: EditorMode): String =
         EditorMode.CREATE -> stringResource(R.string.editor_new)
         EditorMode.TAKE -> stringResource(R.string.editor_take)
         EditorMode.EDIT -> stringResource(R.string.editor_edit)
+    }
+
+private fun labelOf(target: TimeTarget): Int =
+    when (target) {
+        TimeTarget.WINDOW_START -> R.string.window_from
+        TimeTarget.WINDOW_END -> R.string.window_to
+        else -> R.string.field_taken_at
     }
 
 private fun commitLabelOf(mode: EditorMode): Int =

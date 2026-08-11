@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
-/** The swatches offered for a medication, one per hue so two drugs never look alike. */
+/** The swatches offered for a medication: one per hue, then the neutrals a hue wheel cannot reach. */
 val MED_COLORS: List<Int> =
     listOf(
         0xFFE45B5B,
@@ -30,6 +30,10 @@ val MED_COLORS: List<Int> =
         0xFFC44FC7,
         0xFFE05590,
         0xFF7A8494,
+        0xFFFFFFFF,
+        0xFFB4B8C0,
+        0xFF5A5F68,
+        0xFF15171C,
     ).map { it.toInt() }
 
 private val PRN_SHAPES =
