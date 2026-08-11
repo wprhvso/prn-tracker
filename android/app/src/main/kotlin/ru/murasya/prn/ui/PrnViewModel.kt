@@ -20,18 +20,16 @@ import ru.murasya.prn.domain.Alert
 import ru.murasya.prn.domain.MedState
 import ru.murasya.prn.domain.alerts
 import ru.murasya.prn.domain.medStates
-import ru.murasya.prn.domain.toleranceHistory
 import ru.murasya.prn.notify.refreshReminders
 
 /** How often the screen re-reads the clock so "in 2 h" and "due now" stay honest. */
 private const val TICK_MS = 20_000L
 private const val KEEP_ALIVE_MS = 5_000L
 
-/** One row of the log: the intake, the medication it belongs to, and the tolerance it sat at. */
+/** One row of the log: the intake and the medication it belongs to. */
 data class LogEntry(
     val intake: Intake,
     val med: Med,
-    val tolerance: Double?,
 )
 
 data class EditorState(
@@ -172,11 +170,7 @@ class PrnViewModel(
     private fun compose(meds: List<Med>, intakes: List<Intake>, now: Long): PrnUiState {
         val states = medStates(meds, intakes, now, ZoneId.systemDefault())
         val byId = meds.associateBy { it.id }
-        val history = toleranceHistory(meds, intakes)
-        val entries =
-            intakes.mapNotNull { intake ->
-                byId[intake.medId]?.let { med -> LogEntry(intake, med, history[intake.id]) }
-            }
+        val entries = intakes.mapNotNull { intake -> byId[intake.medId]?.let { med -> LogEntry(intake, med) } }
         return PrnUiState(now, states, alerts(states), entries, ready = true)
     }
 }

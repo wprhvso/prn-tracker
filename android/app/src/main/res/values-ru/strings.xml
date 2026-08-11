@@ -11,8 +11,6 @@
     <string name="alert_due">Пора принимать</string>
     <string name="alert_due_late">Можно было %1$s</string>
     <string name="alert_empty">Дозы закончились</string>
-    <string name="tolerance_short">×%1$s</string>
-    <string name="tolerance_reset">сброс через %1$s</string>
 
     <!-- Medication status -->
     <string name="status_ready">Можно</string>
@@ -29,8 +27,6 @@
     <string name="field_stock">Доз в запасе</string>
     <string name="field_interval">Раз в N часов</string>
     <string name="field_window">Часы</string>
-    <string name="field_tolerance_rise">Толер. рост, дн</string>
-    <string name="field_tolerance_fade">Толер. спад, дн</string>
     <string name="field_taken_at">Время приёма</string>
     <string name="window_from">С</string>
     <string name="window_to">До</string>
@@ -51,8 +47,6 @@
     <string name="warn_early">Следующая доза %1$s</string>
     <string name="warn_window">Вне разрешённого диапазона %1$s</string>
     <string name="warn_stock">Доз в запасе не осталось</string>
-    <string name="warn_tolerance">Толерантность ×%1$s — перерыв %2$s её сбросит</string>
-    <string name="warn_tolerance_after">После этой дозы толерантность ×%1$s — сбросит перерыв %2$s</string>
 
     <!-- Delete confirmation -->
     <string name="delete_title">Удалить «%1$s»?</string>

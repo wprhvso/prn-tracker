@@ -32,7 +32,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 import ru.murasya.prn.R
 import ru.murasya.prn.data.Med
-import ru.murasya.prn.domain.formatMultiplier
 import ru.murasya.prn.domain.formatNumber
 
 /** Lines up the clock column so 09:05 and 14:22 share a left edge. */
@@ -136,11 +135,7 @@ private fun EntryText(entry: LogEntry, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun entryDetail(entry: LogEntry): String {
-    val dose = stringResource(R.string.dose_mg, formatNumber(entry.intake.doseMg))
-    val tolerance = entry.tolerance ?: return dose
-    return "$dose  ·  ${stringResource(R.string.tolerance_short, formatMultiplier(tolerance))}"
-}
+private fun entryDetail(entry: LogEntry): String = stringResource(R.string.dose_mg, formatNumber(entry.intake.doseMg))
 
 /**
  * A bar rather than a dot: down a column of rows the eye follows a vertical stripe far faster, and

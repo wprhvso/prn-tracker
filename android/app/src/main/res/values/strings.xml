@@ -13,8 +13,6 @@
     <string name="alert_due">Time to take it</string>
     <string name="alert_due_late">Due %1$s</string>
     <string name="alert_empty">Out of doses</string>
-    <string name="tolerance_short">×%1$s</string>
-    <string name="tolerance_reset">reset in %1$s</string>
 
     <!-- Medication status -->
     <string name="status_ready">Ready</string>
@@ -31,8 +29,6 @@
     <string name="field_stock">Doses in stock</string>
     <string name="field_interval">Every N hours</string>
     <string name="field_window">Window</string>
-    <string name="field_tolerance_rise">Tol. rise, days</string>
-    <string name="field_tolerance_fade">Tol. fade, days</string>
     <string name="field_taken_at">Taken at</string>
     <string name="window_from">From</string>
     <string name="window_to">To</string>
@@ -53,8 +49,6 @@
     <string name="warn_early">Next dose is due %1$s</string>
     <string name="warn_window">Outside the allowed window %1$s</string>
     <string name="warn_stock">No doses left in stock</string>
-    <string name="warn_tolerance">Tolerance ×%1$s — %2$s off would reset it</string>
-    <string name="warn_tolerance_after">×%1$s tolerance after this dose — %2$s off would reset it</string>
 
     <!-- Delete confirmation -->
     <string name="delete_title">Delete %1$s?</string>

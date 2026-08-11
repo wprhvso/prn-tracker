@@ -41,7 +41,6 @@ data class MedState(
     val dueAt: Long?,
     val due: Boolean,
     val windowOpen: Boolean,
-    val tolerance: Tolerance?,
     val remindAt: Long?,
 )
 
@@ -70,7 +69,7 @@ data class Alert(
 fun medStates(meds: List<Med>, intakes: List<Intake>, now: Long, zone: ZoneId): List<MedState> {
     val lastTaken = intakes.groupBy { it.medId }.mapValues { (_, own) -> own.maxOf { it.takenAt } }
     return meds
-        .map { med -> medState(med, lastTaken[med.id], intakes, now, zone) }
+        .map { med -> medState(med, lastTaken[med.id], now, zone) }
         .sortedWith(compareBy<MedState>({ urgencyOf(it) }, { waitOf(it) }, { it.med.name.lowercase() }))
 }
 
@@ -82,8 +81,7 @@ fun alerts(states: List<MedState>): List<Alert> =
 
 /**
  * The subset worth waking someone for. A dose that is allowed but outside its hours stays on
- * screen and off the notification shade; tolerance never gets here at all, because it is a state
- * rather than an event and pushing it would mean nagging somebody who already stopped.
+ * screen and off the notification shade.
  */
 fun notifiableAlerts(states: List<MedState>): List<Alert> =
     alerts(states).filter { it.kind != AlertKind.DUE || it.state.windowOpen }
@@ -118,7 +116,7 @@ private fun alertKinds(state: MedState): List<AlertKind> =
         }
     }
 
-private fun medState(med: Med, lastTakenAt: Long?, intakes: List<Intake>, now: Long, zone: ZoneId): MedState {
+private fun medState(med: Med, lastTakenAt: Long?, now: Long, zone: ZoneId): MedState {
     val dueAt = nextDueAt(med, lastTakenAt)
     return MedState(
         med = med,
@@ -126,7 +124,6 @@ private fun medState(med: Med, lastTakenAt: Long?, intakes: List<Intake>, now: L
         dueAt = dueAt,
         due = dueAt != null && dueAt <= now,
         windowOpen = inWindow(now, med.windowStartMinute, med.windowEndMinute, zone),
-        tolerance = toleranceAt(now, med, intakes),
         remindAt = remindAt(med, dueAt, now, zone),
     )
 }
