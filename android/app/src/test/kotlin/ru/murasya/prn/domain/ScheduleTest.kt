@@ -22,7 +22,7 @@ private fun med(intervalHours: Double? = null, windowStartMinute: Int? = null, w
         windowStartMinute = windowStartMinute,
         windowEndMinute = windowEndMinute,
         doseMg = 100.0,
-        dosesLeft = 10,
+        stockMg = 1000.0,
         colorArgb = 0,
         createdAt = at(0),
     )

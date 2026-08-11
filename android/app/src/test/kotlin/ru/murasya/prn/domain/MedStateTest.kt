@@ -18,7 +18,7 @@ private fun moment(hour: Int, minute: Int = 0, day: Int = 10): Long =
 private fun med(
     id: Long = 1,
     intervalHours: Double? = 6.0,
-    dosesLeft: Int? = 10,
+    stockMg: Double? = 1000.0,
     windowStartMinute: Int? = null,
     windowEndMinute: Int? = null,
 ) = Med(
@@ -28,7 +28,7 @@ private fun med(
     windowStartMinute = windowStartMinute,
     windowEndMinute = windowEndMinute,
     doseMg = 100.0,
-    dosesLeft = dosesLeft,
+    stockMg = stockMg,
     colorArgb = 0,
     createdAt = moment(0),
 )
@@ -102,13 +102,14 @@ class MedStateTest {
         assertNull(nextWakeAt(listOf(state)))
     }
 
+    /** The dose is 100 mg, so "three doses left" is anything under 300 mg. */
     @Test
     fun stockThresholdsRaiseExactlyOneStockAlert() {
         val now = moment(11)
-        val plenty = medStates(listOf(med(id = 1, intervalHours = null, dosesLeft = 4)), emptyList(), now, ZONE)
-        val low = medStates(listOf(med(id = 2, intervalHours = null, dosesLeft = 3)), emptyList(), now, ZONE)
-        val empty = medStates(listOf(med(id = 3, intervalHours = null, dosesLeft = 0)), emptyList(), now, ZONE)
-        val untracked = medStates(listOf(med(id = 4, intervalHours = null, dosesLeft = null)), emptyList(), now, ZONE)
+        val plenty = medStates(listOf(med(id = 1, intervalHours = null, stockMg = 300.0)), emptyList(), now, ZONE)
+        val low = medStates(listOf(med(id = 2, intervalHours = null, stockMg = 299.0)), emptyList(), now, ZONE)
+        val empty = medStates(listOf(med(id = 3, intervalHours = null, stockMg = 0.0)), emptyList(), now, ZONE)
+        val untracked = medStates(listOf(med(id = 4, intervalHours = null, stockMg = null)), emptyList(), now, ZONE)
         assertEquals(emptyList<AlertKind>(), alerts(plenty).map { it.kind })
         assertEquals(listOf(AlertKind.LOW_STOCK), alerts(low).map { it.kind })
         assertEquals(listOf(AlertKind.OUT_OF_STOCK), alerts(empty).map { it.kind })
@@ -128,7 +129,7 @@ class MedStateTest {
     fun alertsComeOutInSeverityOrder() {
         val states =
             medStates(
-                listOf(med(id = 1, dosesLeft = 0)),
+                listOf(med(id = 1, stockMg = 0.0)),
                 listOf(intake(1, moment(10))),
                 moment(20),
                 ZONE,

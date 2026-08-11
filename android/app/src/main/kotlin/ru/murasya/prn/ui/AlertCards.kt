@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ru.murasya.prn.R
@@ -27,6 +26,7 @@ import ru.murasya.prn.data.Med
 import ru.murasya.prn.domain.Alert
 import ru.murasya.prn.domain.AlertKind
 import ru.murasya.prn.domain.MINUTE_MS
+import ru.murasya.prn.domain.formatNumber
 import ru.murasya.prn.text.shortDuration
 
 /** Everything the notifications say, said again on the home screen where it cannot be missed. */
@@ -98,13 +98,13 @@ private fun bodyOf(alert: Alert, now: Long): String {
     val med = alert.state.med
     return when (alert.kind) {
         AlertKind.DUE -> dueBody(alert, now)
-        AlertKind.LOW_STOCK -> stockLeft(med.dosesLeft ?: 0)
+        AlertKind.LOW_STOCK -> stockLeft(med.stockMg ?: 0.0)
         AlertKind.OUT_OF_STOCK -> stringResource(R.string.alert_empty)
     }
 }
 
 @Composable
-private fun stockLeft(left: Int): String = pluralStringResource(R.plurals.doses_left, left, left)
+private fun stockLeft(mg: Double): String = stringResource(R.string.stock_left, formatNumber(mg))
 
 @Composable
 private fun dueBody(alert: Alert, now: Long): String {

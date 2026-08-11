@@ -4,8 +4,8 @@ import java.time.ZoneId
 import ru.murasya.prn.data.Intake
 import ru.murasya.prn.data.Med
 
-/** Stock at or below this many doses raises the low stock warning. */
-const val LOW_STOCK = 3
+/** Stock worth fewer than this many planned doses raises the low stock warning. */
+const val LOW_STOCK_DOSES = 3
 
 /**
  * Minutes past the due time at which an overdue medication nags again, then hourly forever.
@@ -108,13 +108,19 @@ private fun waitOf(state: MedState): Long = state.dueAt ?: -(state.lastTakenAt ?
 private fun alertKinds(state: MedState): List<AlertKind> =
     buildList {
         if (state.due) add(AlertKind.DUE)
-        when (state.med.dosesLeft) {
-            null -> Unit
-            0 -> add(AlertKind.OUT_OF_STOCK)
-            in 1..LOW_STOCK -> add(AlertKind.LOW_STOCK)
-            else -> Unit
-        }
+        addAll(stockKinds(state.med))
     }
+
+/**
+ * Stock is milligrams now, so "three left" means three planned doses' worth. A medication with no
+ * planned dose has no way to say what three doses would be, so it only ever reports running out.
+ */
+private fun stockKinds(med: Med): List<AlertKind> {
+    val stock = med.stockMg ?: return emptyList()
+    if (stock <= 0.0) return listOf(AlertKind.OUT_OF_STOCK)
+    val low = med.doseMg > 0.0 && stock < LOW_STOCK_DOSES * med.doseMg
+    return if (low) listOf(AlertKind.LOW_STOCK) else emptyList()
+}
 
 private fun medState(med: Med, lastTakenAt: Long?, now: Long, zone: ZoneId): MedState {
     val dueAt = nextDueAt(med, lastTakenAt)

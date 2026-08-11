@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -117,6 +116,6 @@ private fun statusText(state: MedState, now: Long): String {
 @Composable
 private fun metaText(state: MedState): String {
     val dose = stringResource(R.string.dose_mg, formatNumber(state.med.doseMg))
-    val left = state.med.dosesLeft ?: return dose
-    return "$dose  ·  ${pluralStringResource(R.plurals.doses_short, left, left)}"
+    val stock = state.med.stockMg ?: return dose
+    return "$dose  ·  ${stringResource(R.string.stock_short, formatNumber(stock))}"
 }

@@ -75,8 +75,9 @@ private fun earlyWarning(state: MedState?, now: Long): String? {
 
 @Composable
 private fun windowWarning(draft: MedDraft, now: Long, zone: ZoneId): String? {
-    val start = draft.windowStartMinute ?: return null
-    val end = draft.windowEndMinute ?: return null
+    val start = draft.windowStartMinute
+    val end = draft.windowEndMinute
+    // Equal times mean "any hour", and inWindow already reads them that way, so this stays quiet.
     if (inWindow(now, start, end, zone)) return null
     val range = stringResource(R.string.window_range, formatMinuteOfDay(start), formatMinuteOfDay(end))
     return stringResource(R.string.warn_window, range)
@@ -84,6 +85,6 @@ private fun windowWarning(draft: MedDraft, now: Long, zone: ZoneId): String? {
 
 @Composable
 private fun stockWarning(draft: MedDraft): String? {
-    val left = draft.dosesLeft.trim().toIntOrNull() ?: return null
-    return if (left <= 0) stringResource(R.string.warn_stock) else null
+    val stock = draft.stockMg.toStock() ?: return null
+    return if (stock <= 0.0) stringResource(R.string.warn_stock) else null
 }

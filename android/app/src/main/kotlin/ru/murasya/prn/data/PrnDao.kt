@@ -46,9 +46,13 @@ interface PrnDao {
     @Query("DELETE FROM intake WHERE id = :id")
     suspend fun deleteIntake(id: Long)
 
-    @Query("UPDATE med SET dosesLeft = MAX(dosesLeft - 1, 0) WHERE id = :id")
-    suspend fun spendDose(id: Long)
+    @Query("SELECT * FROM intake WHERE id = :id")
+    suspend fun intake(id: Long): Intake?
 
-    @Query("UPDATE med SET dosesLeft = dosesLeft + 1 WHERE id = :id")
-    suspend fun refundDose(id: Long)
+    /** A null stock means "not counting", and `MAX` of a null is null, so it stays that way. */
+    @Query("UPDATE med SET stockMg = MAX(stockMg - :mg, 0) WHERE id = :id")
+    suspend fun spendStock(id: Long, mg: Double)
+
+    @Query("UPDATE med SET stockMg = stockMg + :mg WHERE id = :id")
+    suspend fun refundStock(id: Long, mg: Double)
 }

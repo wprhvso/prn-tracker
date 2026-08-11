@@ -10,7 +10,9 @@
     <!-- Alerts -->
     <string name="alert_due">Пора принимать</string>
     <string name="alert_due_late">Можно было %1$s</string>
-    <string name="alert_empty">Дозы закончились</string>
+    <string name="alert_empty">Запас закончился</string>
+    <string name="stock_left">осталось %1$s мг</string>
+    <string name="stock_short">запас %1$s мг</string>
 
     <!-- Medication status -->
     <string name="status_ready">Можно</string>
@@ -24,9 +26,9 @@
     <string name="editor_edit">Изменить препарат</string>
     <string name="field_name">Название</string>
     <string name="field_dose">Доза, мг</string>
-    <string name="field_stock">Доз в запасе</string>
+    <string name="field_stock">Запас, мг</string>
+    <string name="field_dose_plan">Доза, план, мг</string>
     <string name="field_interval">Раз в N часов</string>
-    <string name="field_window">Часы</string>
     <string name="field_taken_at">Время приёма</string>
     <string name="window_from">С</string>
     <string name="window_to">До</string>
@@ -46,7 +48,7 @@
     <!-- Editor warnings -->
     <string name="warn_early">Следующая доза %1$s</string>
     <string name="warn_window">Вне разрешённого диапазона %1$s</string>
-    <string name="warn_stock">Доз в запасе не осталось</string>
+    <string name="warn_stock">Запаса не осталось</string>
 
     <!-- Delete confirmation -->
     <string name="delete_title">Удалить «%1$s»?</string>
@@ -72,7 +74,7 @@
     <string name="notify_due_text_plain">%1$s мг</string>
     <string name="notify_low_title">%1$s кончается</string>
     <string name="notify_empty_title">%1$s кончился</string>
-    <string name="notify_empty_text">Доз не осталось</string>
+    <string name="notify_empty_text">Запаса не осталось</string>
 
     <!-- Snackbars -->
     <string name="snack_taken">%1$s — записано</string>
@@ -84,19 +86,5 @@
     <string name="dur_now">сейчас</string>
     <string name="time_in">через %1$s</string>
     <string name="time_ago">%1$s назад</string>
-
-    <plurals name="doses_left">
-        <item quantity="one">осталась %1$d доза</item>
-        <item quantity="few">осталось %1$d дозы</item>
-        <item quantity="many">осталось %1$d доз</item>
-        <item quantity="other">осталось %1$d дозы</item>
-    </plurals>
-
-    <plurals name="doses_short">
-        <item quantity="one">%1$d доза</item>
-        <item quantity="few">%1$d дозы</item>
-        <item quantity="many">%1$d доз</item>
-        <item quantity="other">%1$d дозы</item>
-    </plurals>
 
 </resources>
