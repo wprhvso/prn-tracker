@@ -111,7 +111,7 @@ class PrnViewModel(
             if (mode == EditorMode.EDIT) {
                 updateIntake(draft, id)
             } else {
-                logIntake(id, med.doseMg, draft.takenAt)
+                logIntake(id, draft.takenMg, draft.takenAt)
             }
         }
 
@@ -129,7 +129,7 @@ class PrnViewModel(
             val intake = undoable.value ?: return@edit
             undoable.value = null
             dao.deleteIntake(intake.id)
-            dao.refundDose(intake.medId)
+            dao.refundStock(intake.medId, intake.doseMg)
         }
 
     fun forgetUndo() {
@@ -141,23 +141,33 @@ class PrnViewModel(
             dao.med(medId)?.let { dao.deleteMed(it) }
         }
 
-    /** Removing a single mistaken entry puts its dose back in the tin. */
+    /** Removing a single mistaken entry puts its own milligrams back in the tin. */
     fun deleteIntake(intakeId: Long, medId: Long) =
         edit {
+            val taken = dao.intake(intakeId)?.doseMg
             dao.deleteIntake(intakeId)
-            dao.refundDose(medId)
+            if (taken != null) dao.refundStock(medId, taken)
         }
 
     private suspend fun logIntake(medId: Long, doseMg: Double, at: Long): Long {
         val id = dao.insertIntake(Intake(medId = medId, takenAt = at, doseMg = doseMg))
-        dao.spendDose(medId)
+        dao.spendStock(medId, doseMg)
         return id
     }
 
+    /**
+     * Stock is milligrams now, so correcting a dose has to move the tin by the difference — leaving
+     * it alone would let the number drift every time a half or a double got fixed after the fact.
+     */
     private suspend fun updateIntake(draft: MedDraft, medId: Long) {
         if (draft.intakeId == 0L) return
-        val dose = draft.doseMg.toPositiveDouble() ?: 0.0
+        val was = dao.intake(draft.intakeId)?.doseMg
+        val dose = draft.takenMg
         dao.updateIntake(Intake(id = draft.intakeId, medId = medId, takenAt = draft.takenAt, doseMg = dose))
+        if (was != null && was != dose) {
+            dao.refundStock(medId, was)
+            dao.spendStock(medId, dose)
+        }
     }
 
     private fun edit(block: suspend () -> Unit) {

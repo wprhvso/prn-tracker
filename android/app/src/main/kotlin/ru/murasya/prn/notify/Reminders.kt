@@ -35,5 +35,5 @@ suspend fun takeDose(context: Context, medId: Long) {
     dao.insertIntake(
         Intake(medId = med.id, takenAt = System.currentTimeMillis(), doseMg = med.doseMg),
     )
-    dao.spendDose(med.id)
+    dao.spendStock(med.id, med.doseMg)
 }

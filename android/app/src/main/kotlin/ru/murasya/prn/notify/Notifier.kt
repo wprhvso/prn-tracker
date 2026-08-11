@@ -141,13 +141,12 @@ private fun text(context: Context, alert: Alert): String {
     val med = alert.state.med
     return when (alert.kind) {
         AlertKind.DUE -> dueText(context, alert)
-        AlertKind.LOW_STOCK -> stockLeft(context, med.dosesLeft ?: 0)
+        AlertKind.LOW_STOCK -> stockLeft(context, med.stockMg ?: 0.0)
         AlertKind.OUT_OF_STOCK -> context.getString(R.string.notify_empty_text)
     }
 }
 
-private fun stockLeft(context: Context, left: Int): String =
-    context.resources.getQuantityString(R.plurals.doses_left, left, left)
+private fun stockLeft(context: Context, mg: Double): String = context.getString(R.string.stock_left, formatNumber(mg))
 
 private fun dueText(context: Context, alert: Alert): String {
     val dose = formatNumber(alert.state.med.doseMg)

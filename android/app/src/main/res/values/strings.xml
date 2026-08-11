@@ -12,7 +12,9 @@
     <!-- Alerts -->
     <string name="alert_due">Time to take it</string>
     <string name="alert_due_late">Due %1$s</string>
-    <string name="alert_empty">Out of doses</string>
+    <string name="alert_empty">Out of stock</string>
+    <string name="stock_left">%1$s mg left</string>
+    <string name="stock_short">%1$s mg left</string>
 
     <!-- Medication status -->
     <string name="status_ready">Ready</string>
@@ -26,9 +28,9 @@
     <string name="editor_edit">Edit medication</string>
     <string name="field_name">Name</string>
     <string name="field_dose">Dose, mg</string>
-    <string name="field_stock">Doses in stock</string>
+    <string name="field_stock">Stock, mg</string>
+    <string name="field_dose_plan">Dose, plan, mg</string>
     <string name="field_interval">Every N hours</string>
-    <string name="field_window">Window</string>
     <string name="field_taken_at">Taken at</string>
     <string name="window_from">From</string>
     <string name="window_to">To</string>
@@ -48,7 +50,7 @@
     <!-- Editor warnings -->
     <string name="warn_early">Next dose is due %1$s</string>
     <string name="warn_window">Outside the allowed window %1$s</string>
-    <string name="warn_stock">No doses left in stock</string>
+    <string name="warn_stock">Nothing left in stock</string>
 
     <!-- Delete confirmation -->
     <string name="delete_title">Delete %1$s?</string>
@@ -74,7 +76,7 @@
     <string name="notify_due_text_plain">%1$s mg</string>
     <string name="notify_low_title">%1$s is running out</string>
     <string name="notify_empty_title">%1$s has run out</string>
-    <string name="notify_empty_text">No doses left</string>
+    <string name="notify_empty_text">Nothing left</string>
 
     <!-- Snackbars -->
     <string name="snack_taken">%1$s logged</string>
@@ -86,16 +88,5 @@
     <string name="dur_now">now</string>
     <string name="time_in">in %1$s</string>
     <string name="time_ago">%1$s ago</string>
-
-    <plurals name="doses_left">
-        <item quantity="one">%1$d dose left</item>
-        <item quantity="other">%1$d doses left</item>
-    </plurals>
-
-    <!-- The medication cards drop the verb: the column is nothing but doses. -->
-    <plurals name="doses_short">
-        <item quantity="one">%1$d dose</item>
-        <item quantity="other">%1$d doses</item>
-    </plurals>
 
 </resources>

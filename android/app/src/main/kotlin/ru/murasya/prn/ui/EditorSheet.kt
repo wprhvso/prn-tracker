@@ -3,7 +3,6 @@ package ru.murasya.prn.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -15,7 +14,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -27,14 +25,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import java.time.ZoneId
 import ru.murasya.prn.R
 import ru.murasya.prn.domain.MedState
-
-private const val DEFAULT_WINDOW_START = 9 * 60
-private const val DEFAULT_WINDOW_END = 22 * 60
 
 private enum class TimeTarget { NONE, TAKEN, WINDOW_START, WINDOW_END }
 
@@ -113,14 +107,26 @@ private fun EditorFields(draft: MedDraft, zone: ZoneId, onChange: (MedDraft) -> 
         )
         NumberField(
             label = stringResource(R.string.field_stock),
-            value = draft.dosesLeft,
-            onValueChange = { onChange(draft.copy(dosesLeft = it)) },
+            value = draft.stockMg,
+            onValueChange = { onChange(draft.copy(stockMg = it)) },
             modifier = Modifier.weight(1f),
-            decimal = false,
         )
     }
-    IntervalAndWindowRow(draft, onChange)
-    if (draft.windowStartMinute != null && draft.windowEndMinute != null) WindowButtons(draft, onPick)
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        NumberField(
+            label = stringResource(R.string.field_dose_plan),
+            value = draft.planMg,
+            onValueChange = { onChange(draft.copy(planMg = it)) },
+            modifier = Modifier.weight(1f),
+        )
+        NumberField(
+            label = stringResource(R.string.field_interval),
+            value = draft.intervalHours,
+            onValueChange = { onChange(draft.copy(intervalHours = it)) },
+            modifier = Modifier.weight(1f),
+        )
+    }
+    WindowButtons(draft, onPick)
     TimeButton(
         label = stringResource(R.string.field_taken_at),
         minuteOfDay = minuteOfDayOf(draft.takenAt, zone),
@@ -131,55 +137,22 @@ private fun EditorFields(draft: MedDraft, zone: ZoneId, onChange: (MedDraft) -> 
 }
 
 /**
- * How often the drug may be taken, and whether reminders keep to certain hours — one row, because
- * both answer the same question and the switch would waste a whole line on its own. The two times
- * it unfolds into land directly underneath, where the switch that summoned them still reads as the
- * heading.
+ * The hours reminders keep to. Always on show, with no switch guarding them: two equal times mean
+ * "any hour", which is both the answer for a medication that does not care and the state a fresh
+ * one starts in, so the switch had nothing left to say.
  */
-@Composable
-private fun IntervalAndWindowRow(draft: MedDraft, onChange: (MedDraft) -> Unit) {
-    val windowed = draft.windowStartMinute != null && draft.windowEndMinute != null
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        NumberField(
-            label = stringResource(R.string.field_interval),
-            value = draft.intervalHours,
-            onValueChange = { onChange(draft.copy(intervalHours = it)) },
-            modifier = Modifier.weight(1f),
-        )
-        Row(
-            modifier = Modifier.weight(1f),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            // The switch keeps the right edge, so the label centres in whatever is left rather than
-            // clinging to the far side of a gap.
-            Text(
-                text = stringResource(R.string.field_window),
-                style = MaterialTheme.typography.labelLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f),
-            )
-            Switch(checked = windowed, onCheckedChange = { onChange(draft.withWindow(it)) })
-        }
-    }
-}
-
 @Composable
 private fun WindowButtons(draft: MedDraft, onPick: (TimeTarget) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
         TimeButton(
             label = stringResource(R.string.window_from),
-            minuteOfDay = draft.windowStartMinute ?: DEFAULT_WINDOW_START,
+            minuteOfDay = draft.windowStartMinute,
             onClick = { onPick(TimeTarget.WINDOW_START) },
             modifier = Modifier.weight(1f),
         )
         TimeButton(
             label = stringResource(R.string.window_to),
-            minuteOfDay = draft.windowEndMinute ?: DEFAULT_WINDOW_END,
+            minuteOfDay = draft.windowEndMinute,
             onClick = { onPick(TimeTarget.WINDOW_END) },
             modifier = Modifier.weight(1f),
         )
@@ -215,8 +188,8 @@ private fun TimePickers(
     val initial =
         when (target) {
             TimeTarget.TAKEN -> minuteOfDayOf(draft.takenAt, zone)
-            TimeTarget.WINDOW_START -> draft.windowStartMinute ?: DEFAULT_WINDOW_START
-            else -> draft.windowEndMinute ?: DEFAULT_WINDOW_END
+            TimeTarget.WINDOW_START -> draft.windowStartMinute
+            else -> draft.windowEndMinute
         }
     PrnTimePickerDialog(
         title = stringResource(labelOf(target)),
@@ -252,16 +225,6 @@ private fun DeleteDialog(draft: MedDraft, onConfirm: () -> Unit, onDismiss: () -
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
-
-private fun MedDraft.withWindow(on: Boolean): MedDraft =
-    if (on) {
-        copy(
-            windowStartMinute = windowStartMinute ?: DEFAULT_WINDOW_START,
-            windowEndMinute = windowEndMinute ?: DEFAULT_WINDOW_END,
-        )
-    } else {
-        copy(windowStartMinute = null, windowEndMinute = null)
-    }
 
 private fun MedDraft.withPickedTime(target: TimeTarget, minute: Int, zone: ZoneId, now: Long): MedDraft =
     when (target) {
