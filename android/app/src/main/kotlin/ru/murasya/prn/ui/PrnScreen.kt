@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -20,15 +19,13 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +39,9 @@ import java.time.ZoneId
 import ru.murasya.prn.R
 import ru.murasya.prn.data.Med
 
+/** Enough room under the last row that the floating button never covers it. */
+private const val FAB_CLEARANCE = 88
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrnScreen(viewModel: PrnViewModel = viewModel()) {
@@ -49,15 +49,14 @@ fun PrnScreen(viewModel: PrnViewModel = viewModel()) {
     val editor by viewModel.editor.collectAsStateWithLifecycle()
     val permissions = rememberPermissionState()
     val zone = remember { ZoneId.systemDefault() }
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbar = remember { SnackbarHostState() }
 
     LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.refresh() }
     UndoBar(state, viewModel, snackbar)
 
     Scaffold(
-        modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { PrnTopBar(scrollBehavior) },
+        modifier = Modifier.fillMaxSize(),
+        topBar = { PrnTopBar() },
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = { AddButton { viewModel.openCreate(nextColor(state.usedColors())) } },
     ) { padding ->
@@ -121,13 +120,14 @@ private fun Editor(editor: EditorState?, state: PrnUiState, zone: ZoneId, viewMo
     )
 }
 
+/**
+ * Deliberately the compact bar. A collapsing one turns every screen into a scrolling screen,
+ * because the bar itself always has somewhere to go even when the list does not.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PrnTopBar(scrollBehavior: TopAppBarScrollBehavior) {
-    LargeTopAppBar(
-        title = { Text(stringResource(R.string.app_name)) },
-        scrollBehavior = scrollBehavior,
-    )
+private fun PrnTopBar() {
+    TopAppBar(title = { Text(stringResource(R.string.app_name)) })
 }
 
 @Composable
@@ -157,7 +157,7 @@ private fun LogList(
                 start = 16.dp,
                 end = 16.dp,
                 top = padding.calculateTopPadding() + 4.dp,
-                bottom = padding.calculateBottomPadding() + 104.dp,
+                bottom = padding.calculateBottomPadding() + FAB_CLEARANCE.dp,
             ),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {

@@ -115,7 +115,7 @@ private fun statusText(state: MedState, now: Long): String {
         dueAt == null && last != null -> stringResource(R.string.status_last, relativeDuration(context, now, last))
         dueAt == null -> stringResource(R.string.status_free)
         state.due -> stringResource(R.string.status_ready)
-        else -> stringResource(R.string.status_next, relativeDuration(context, now, dueAt))
+        else -> relativeDuration(context, now, dueAt)
     }
 }
 
@@ -132,6 +132,6 @@ private fun metaText(state: MedState): String {
         }
     }
     val left = state.med.dosesLeft
-    if (left != null) parts += pluralStringResource(R.plurals.doses_left, left, left)
+    if (left != null) parts += pluralStringResource(R.plurals.doses_short, left, left)
     return parts.joinToString("  ·  ")
 }

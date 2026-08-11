@@ -18,9 +18,8 @@
 
     <!-- Medication status -->
     <string name="status_ready">Ready</string>
-    <string name="status_next">Next %1$s</string>
     <string name="status_free">As needed</string>
-    <string name="status_last">Last %1$s</string>
+    <string name="status_last">last %1$s</string>
     <string name="dose_mg">%1$s mg</string>
     <string name="window_range">%1$s–%2$s</string>
 
@@ -32,12 +31,8 @@
     <string name="field_dose">Dose, mg</string>
     <string name="field_stock">Doses in stock</string>
     <string name="field_interval">Every N hours</string>
-    <string name="field_interval_hint">Remind me this long after the last dose</string>
     <string name="field_window">Allowed hours</string>
-    <string name="field_window_hint">Remind me only inside this window</string>
     <string name="field_tolerance">Tolerance, days</string>
-    <string name="field_tolerance_hint">Days for one dose worth of tolerance to fade</string>
-    <string name="field_color">Colour in the log</string>
     <string name="field_taken_at">Taken at</string>
     <string name="window_from">From</string>
     <string name="window_to">To</string>
@@ -48,6 +43,12 @@
     <string name="action_undo">Undo</string>
     <string name="action_add">Add</string>
     <string name="action_ok">Got it</string>
+    <string name="action_custom_colour">Custom colour</string>
+    <string name="action_keyboard">Type the time</string>
+    <string name="action_dial">Pick on the dial</string>
+    <string name="colour_hue">Hue</string>
+    <string name="colour_saturation">Saturation</string>
+    <string name="colour_brightness">Brightness</string>
 
     <!-- Editor warnings -->
     <string name="warn_early">Next dose is due %1$s</string>
@@ -96,6 +97,12 @@
     <plurals name="doses_left">
         <item quantity="one">%1$d dose left</item>
         <item quantity="other">%1$d doses left</item>
+    </plurals>
+
+    <!-- The medication cards drop the verb: the column is nothing but doses. -->
+    <plurals name="doses_short">
+        <item quantity="one">%1$d dose</item>
+        <item quantity="other">%1$d doses</item>
     </plurals>
 
 </resources>

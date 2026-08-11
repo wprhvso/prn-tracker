@@ -16,9 +16,8 @@
 
     <!-- Medication status -->
     <string name="status_ready">Можно</string>
-    <string name="status_next">Следующая %1$s</string>
     <string name="status_free">По необходимости</string>
-    <string name="status_last">Последняя %1$s</string>
+    <string name="status_last">приняли %1$s</string>
     <string name="dose_mg">%1$s мг</string>
     <string name="window_range">%1$s–%2$s</string>
 
@@ -30,12 +29,8 @@
     <string name="field_dose">Доза, мг</string>
     <string name="field_stock">Доз в запасе</string>
     <string name="field_interval">Раз в N часов</string>
-    <string name="field_interval_hint">Напомнить через столько часов после приёма</string>
     <string name="field_window">Часы приёма</string>
-    <string name="field_window_hint">Напоминать только внутри этого диапазона</string>
     <string name="field_tolerance">Толерантность, дней</string>
-    <string name="field_tolerance_hint">За сколько дней сходит толерантность от одной дозы</string>
-    <string name="field_color">Цвет в логе</string>
     <string name="field_taken_at">Время приёма</string>
     <string name="window_from">С</string>
     <string name="window_to">До</string>
@@ -46,6 +41,12 @@
     <string name="action_undo">Вернуть</string>
     <string name="action_add">Добавить</string>
     <string name="action_ok">Понятно</string>
+    <string name="action_custom_colour">Свой цвет</string>
+    <string name="action_keyboard">Ввести время</string>
+    <string name="action_dial">Выбрать на циферблате</string>
+    <string name="colour_hue">Тон</string>
+    <string name="colour_saturation">Насыщенность</string>
+    <string name="colour_brightness">Яркость</string>
 
     <!-- Editor warnings -->
     <string name="warn_early">Следующая доза %1$s</string>
@@ -96,6 +97,13 @@
         <item quantity="few">осталось %1$d дозы</item>
         <item quantity="many">осталось %1$d доз</item>
         <item quantity="other">осталось %1$d дозы</item>
+    </plurals>
+
+    <plurals name="doses_short">
+        <item quantity="one">%1$d доза</item>
+        <item quantity="few">%1$d дозы</item>
+        <item quantity="many">%1$d доз</item>
+        <item quantity="other">%1$d дозы</item>
     </plurals>
 
 </resources>
