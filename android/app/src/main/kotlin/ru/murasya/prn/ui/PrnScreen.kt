@@ -1,5 +1,7 @@
 package ru.murasya.prn.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -20,8 +24,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -41,6 +48,7 @@ import ru.murasya.prn.data.Med
 
 /** Enough room under the last row that the floating button never covers it. */
 private const val FAB_CLEARANCE = 88
+private const val FAB_PRESS_SCALE = 0.92f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,26 +58,34 @@ fun PrnScreen(viewModel: PrnViewModel = viewModel()) {
     val permissions = rememberPermissionState()
     val zone = remember { ZoneId.systemDefault() }
     val snackbar = remember { SnackbarHostState() }
+    val list = rememberLazyListState()
 
     LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.refresh() }
     UndoBar(state, viewModel, snackbar)
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = { PrnTopBar() },
-        snackbarHost = { SnackbarHost(snackbar) },
-        floatingActionButton = { AddButton { viewModel.openCreate(nextColor(state.usedColors())) } },
-    ) { padding ->
-        LogList(
-            state = state,
-            permissions = permissions,
-            padding = padding,
-            zone = zone,
-            onTake = { med -> viewModel.take(med.id) },
-            onOpen = viewModel::openTake,
-            onEditEntry = { entry -> viewModel.openEdit(entry.med, entry.intake) },
-            onEditMed = { med -> viewModel.openEdit(med, null) },
-        )
+    CompositionLocalProvider(LocalEntranceWindow provides rememberEntranceWindow(state.ready)) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = { PrnTopBar(list) },
+            snackbarHost = { SnackbarHost(snackbar) },
+            floatingActionButton = {
+                AddButton(inviting = state.ready && state.states.isEmpty()) {
+                    viewModel.openCreate(nextColor(state.usedColors()))
+                }
+            },
+        ) { padding ->
+            LogList(
+                state = state,
+                permissions = permissions,
+                list = list,
+                padding = padding,
+                zone = zone,
+                onTake = { med -> viewModel.take(med.id) },
+                onOpen = viewModel::openTake,
+                onEditEntry = { entry -> viewModel.openEdit(entry.med, entry.intake) },
+                onEditMed = { med -> viewModel.openEdit(med, null) },
+            )
+        }
     }
 
     Editor(editor, state, zone, viewModel)
@@ -126,21 +142,48 @@ private fun Editor(editor: EditorState?, state: PrnUiState, zone: ZoneId, viewMo
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PrnTopBar() {
-    TopAppBar(title = { Text(stringResource(R.string.app_name)) })
+private fun PrnTopBar(list: LazyListState) {
+    val lifted by remember(list) { derivedStateOf { list.canScrollBackward } }
+    val scheme = MaterialTheme.colorScheme
+    val container by
+        animateColorAsState(
+            targetValue = if (lifted) scheme.surfaceContainer else scheme.surface,
+            animationSpec = effects(),
+            label = "topBarContainer",
+        )
+    TopAppBar(
+        title = { Text(stringResource(R.string.app_name)) },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = container),
+    )
 }
 
 @Composable
-private fun AddButton(onClick: () -> Unit) {
-    FloatingActionButton(onClick = onClick, shape = MaterialTheme.shapes.large) {
-        Icon(painterResource(R.drawable.ic_add), contentDescription = stringResource(R.string.action_add))
+private fun AddButton(inviting: Boolean, onClick: () -> Unit) {
+    val interactions = remember { MutableInteractionSource() }
+    FloatingActionButton(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.large,
+        interactionSource = interactions,
+        modifier = Modifier.entrance().pressSquish(interactions, FAB_PRESS_SCALE),
+    ) {
+        AddIcon(inviting)
     }
+}
+
+@Composable
+private fun AddIcon(inviting: Boolean) {
+    Icon(
+        painter = painterResource(R.drawable.ic_add),
+        contentDescription = stringResource(R.string.action_add),
+        modifier = Modifier.breathing(inviting),
+    )
 }
 
 @Composable
 private fun LogList(
     state: PrnUiState,
     permissions: PermissionState,
+    list: LazyListState,
     padding: PaddingValues,
     zone: ZoneId,
     onTake: (Med) -> Unit,
@@ -151,6 +194,7 @@ private fun LogList(
     val today = remember(state.now) { localDate(state.now, zone) }
     val days = remember(state.entries) { state.entries.groupBy { localDate(it.intake.takenAt, zone) } }
     LazyColumn(
+        state = list,
         modifier = Modifier.fillMaxSize(),
         contentPadding =
             PaddingValues(
@@ -161,33 +205,49 @@ private fun LogList(
             ),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        permissionItems(permissions)
-        alertItems(state, onTake)
-        stripItem(state, onOpen, onEditMed)
-        emptyItem(state)
-        daySections(days, today, zone, onOpen, onEditEntry)
+        var next = permissionItems(permissions, 0)
+        next = alertItems(state, onTake, next)
+        next = stripItem(state, onOpen, onEditMed, next)
+        next = emptyItem(state, next)
+        daySections(days, today, zone, onOpen, onEditEntry, next)
     }
 }
 
-private fun LazyListScope.permissionItems(permissions: PermissionState) {
-    if (!permissions.notifications) item(key = "perm-notifications") { NotificationBanner(permissions) }
-    if (!permissions.exactAlarms) item(key = "perm-alarms") { ExactAlarmBanner(permissions) }
-}
-
-private fun LazyListScope.alertItems(state: PrnUiState, onTake: (Med) -> Unit) {
-    items(state.alerts, key = { "alert-${it.state.med.id}-${it.kind}" }) { alert ->
-        AlertCard(alert, state.now, onTake)
+private fun LazyListScope.permissionItems(permissions: PermissionState, from: Int): Int {
+    var next = from
+    if (!permissions.notifications) {
+        val at = next++
+        item(key = "perm-notifications") { NotificationBanner(permissions, itemMotion(at)) }
     }
+    if (!permissions.exactAlarms) {
+        val at = next++
+        item(key = "perm-alarms") { ExactAlarmBanner(permissions, itemMotion(at)) }
+    }
+    return next
 }
 
-private fun LazyListScope.stripItem(state: PrnUiState, onOpen: (Med) -> Unit, onEditMed: (Med) -> Unit) {
-    if (state.states.isEmpty()) return
-    item(key = "strip") { MedStrip(state.states, state.now, onOpen, onEditMed) }
+private fun LazyListScope.alertItems(state: PrnUiState, onTake: (Med) -> Unit, from: Int): Int {
+    itemsIndexed(state.alerts, key = { _, alert -> "alert-${alert.state.med.id}-${alert.kind}" }) { index, alert ->
+        AlertCard(alert, state.now, onTake, itemMotion(from + index))
+    }
+    return from + state.alerts.size
 }
 
-private fun LazyListScope.emptyItem(state: PrnUiState) {
-    if (!state.ready || state.entries.isNotEmpty()) return
-    item(key = "empty") { EmptyState() }
+private fun LazyListScope.stripItem(
+    state: PrnUiState,
+    onOpen: (Med) -> Unit,
+    onEditMed: (Med) -> Unit,
+    from: Int,
+): Int {
+    if (state.states.isEmpty()) return from
+    item(key = "strip") { MedStrip(state.states, state.now, from, onOpen, onEditMed, itemPlacement()) }
+    return from + state.states.size
+}
+
+private fun LazyListScope.emptyItem(state: PrnUiState, from: Int): Int {
+    if (!state.ready || state.entries.isNotEmpty()) return from
+    item(key = "empty") { EmptyState(itemMotion(from)) }
+    return from + 1
 }
 
 private fun LazyListScope.daySections(
@@ -196,16 +256,19 @@ private fun LazyListScope.daySections(
     zone: ZoneId,
     onTake: (Med) -> Unit,
     onEdit: (LogEntry) -> Unit,
+    from: Int,
 ) {
-    days.forEach { (day, entries) ->
-        item(key = "day-$day") { DaySection(day, today, entries, zone, onTake, onEdit) }
+    days.entries.forEachIndexed { index, (day, entries) ->
+        item(key = "day-$day") {
+            DaySection(day, today, entries, zone, onTake, onEdit, itemMotion(from + index))
+        }
     }
 }
 
 @Composable
-private fun EmptyState() {
+private fun EmptyState(modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 72.dp, start = 24.dp, end = 24.dp),
+        modifier = modifier.fillMaxWidth().padding(top = 72.dp, start = 24.dp, end = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {

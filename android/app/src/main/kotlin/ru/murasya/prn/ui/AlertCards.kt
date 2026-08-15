@@ -1,6 +1,7 @@
 package ru.murasya.prn.ui
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,10 +11,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,9 +32,11 @@ import ru.murasya.prn.domain.MINUTE_MS
 import ru.murasya.prn.domain.formatNumber
 import ru.murasya.prn.text.shortDuration
 
+private const val ICON_SIZE = 24
+
 /** Everything the notifications say, said again on the home screen where it cannot be missed. */
 @Composable
-fun AlertCard(alert: Alert, now: Long, onTake: (Med) -> Unit) {
+fun AlertCard(alert: Alert, now: Long, onTake: (Med) -> Unit, modifier: Modifier = Modifier) {
     Banner(
         icon = iconOf(alert.kind),
         container = containerOf(alert.kind),
@@ -41,6 +46,8 @@ fun AlertCard(alert: Alert, now: Long, onTake: (Med) -> Unit) {
         action = if (alert.kind == AlertKind.DUE) stringResource(R.string.action_take) else null,
         actionIcon = R.drawable.ic_check,
         onAction = { onTake(alert.state.med) },
+        modifier = modifier,
+        urgent = alert.kind == AlertKind.DUE,
     )
 }
 
@@ -54,19 +61,21 @@ fun Banner(
     action: String?,
     @DrawableRes actionIcon: Int,
     onAction: () -> Unit,
+    modifier: Modifier = Modifier,
+    urgent: Boolean = false,
 ) {
     Surface(
         shape = MaterialTheme.shapes.large,
         color = container,
         contentColor = content,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Row(
             modifier = Modifier.padding(start = 18.dp, end = 12.dp, top = 14.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp))
+            BannerIcon(icon, urgent)
             BannerText(title, body, Modifier.weight(1f))
             if (action != null) BannerAction(action, actionIcon, onAction)
         }
@@ -74,10 +83,22 @@ fun Banner(
 }
 
 @Composable
+private fun BannerIcon(
+    @DrawableRes icon: Int,
+    urgent: Boolean,
+) {
+    Icon(
+        painter = painterResource(icon),
+        contentDescription = null,
+        modifier = Modifier.size(ICON_SIZE.dp).breathing(urgent),
+    )
+}
+
+@Composable
 private fun BannerText(title: String, body: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(text = title, style = MaterialTheme.typography.titleMedium)
-        Text(text = body, style = MaterialTheme.typography.bodyMedium)
+        TickerText(text = body, style = MaterialTheme.typography.bodyMedium, color = LocalContentColor.current)
     }
 }
 
@@ -87,7 +108,13 @@ private fun BannerAction(
     @DrawableRes icon: Int,
     onClick: () -> Unit,
 ) {
-    FilledTonalButton(onClick = onClick, contentPadding = ButtonDefaults.ButtonWithIconContentPadding) {
+    val interactions = remember { MutableInteractionSource() }
+    FilledTonalButton(
+        onClick = onClick,
+        contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+        interactionSource = interactions,
+        modifier = Modifier.pressSquish(interactions),
+    ) {
         Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
         Text(text = label, modifier = Modifier.padding(start = ButtonDefaults.IconSpacing))
     }

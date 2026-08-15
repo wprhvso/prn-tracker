@@ -2,6 +2,9 @@ package ru.murasya.prn.ui
 
 import android.graphics.Color as AndroidColor
 import android.text.format.DateFormat
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -51,6 +54,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -71,6 +75,10 @@ private const val HUE_SECTOR = 60f
 private const val HUE_BAR_HEIGHT = 30
 private const val MARKER_RADIUS = 9
 private const val SHADE_ASPECT = 1.7f
+private const val TUNE_TURN = 180f
+private const val RING_CHOSEN = 3
+private const val RING_IDLE = 1
+private const val CHECK_SIZE = 18
 
 /** The six primaries plus the wrap back to red: hue is linear, so the gradient between them is exact. */
 private val HUE_STOPS: List<Color> = List(7) { step -> Color.hsv(step * HUE_SECTOR, 1f, 1f) }
@@ -126,7 +134,8 @@ fun ColorPicker(selected: Int, onSelect: (Int) -> Unit) {
     var brightness by remember { mutableFloatStateOf(start[2]) }
     var custom by remember { mutableStateOf(false) }
 
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    val turn by animateFloatAsState(if (custom) TUNE_TURN else 0f, animationSpec = spatial(), label = "tune")
+    Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             SwatchRow(selected, Modifier.weight(1f)) { argb ->
                 val picked = hsvOf(argb)
@@ -136,18 +145,27 @@ fun ColorPicker(selected: Int, onSelect: (Int) -> Unit) {
                 onSelect(argb)
             }
             IconButton(onClick = { custom = !custom }) {
-                Icon(painterResource(R.drawable.ic_tune), stringResource(R.string.action_custom_colour))
+                Icon(
+                    painter = painterResource(R.drawable.ic_tune),
+                    contentDescription = stringResource(R.string.action_custom_colour),
+                    modifier = Modifier.graphicsLayer { rotationZ = turn },
+                )
             }
         }
-        if (custom) {
-            ShadeField(hue, saturation, brightness) { s, v ->
-                saturation = s
-                brightness = v
-                onSelect(argbOf(hue, s, v))
-            }
-            HueBar(hue) { h ->
-                hue = h
-                onSelect(argbOf(h, saturation, brightness))
+        Reveal(visible = custom) {
+            Column(
+                modifier = Modifier.padding(top = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                ShadeField(hue, saturation, brightness) { s, v ->
+                    saturation = s
+                    brightness = v
+                    onSelect(argbOf(hue, s, v))
+                }
+                HueBar(hue) { h ->
+                    hue = h
+                    onSelect(argbOf(h, saturation, brightness))
+                }
             }
         }
     }
@@ -244,23 +262,31 @@ private fun DrawScope.marker(at: Offset) {
 @Composable
 private fun ColorDot(argb: Int, chosen: Boolean, onSelect: (Int) -> Unit) {
     val color = Color(argb)
-    val edge = if (chosen) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outlineVariant
+    val scheme = MaterialTheme.colorScheme
+    val target = if (chosen) scheme.onSurface else scheme.outlineVariant
+    val edge by animateColorAsState(target, animationSpec = effects(), label = "dotEdge")
+    val ring by
+        animateDpAsState(
+            targetValue = if (chosen) RING_CHOSEN.dp else RING_IDLE.dp,
+            animationSpec = spatial(),
+            label = "dotRing",
+        )
     Box(
         modifier =
             Modifier
                 .size(SWATCH_SIZE.dp)
                 .clip(CircleShape)
                 .background(color)
-                .border(if (chosen) 3.dp else 1.dp, edge, CircleShape)
+                .border(ring, edge, CircleShape)
                 .clickable { onSelect(argb) },
         contentAlignment = Alignment.Center,
     ) {
-        if (chosen) {
+        PopIn(chosen) {
             Icon(
                 painter = painterResource(R.drawable.ic_check),
                 contentDescription = null,
                 tint = onSwatch(color),
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(CHECK_SIZE.dp),
             )
         }
     }

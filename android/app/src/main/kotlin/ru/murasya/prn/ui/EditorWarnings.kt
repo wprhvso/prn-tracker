@@ -1,5 +1,6 @@
 package ru.murasya.prn.ui
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -36,21 +39,24 @@ fun EditorWarnings(state: MedState?, draft: MedDraft, now: Long, zone: ZoneId) {
             windowWarning(draft, now, zone),
             stockWarning(draft),
         )
-    if (warnings.isEmpty()) return
-    Surface(
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        WarningLines(warnings)
+    val held = remember { mutableStateOf(warnings) }
+    if (warnings.isNotEmpty()) held.value = warnings
+    Reveal(visible = warnings.isNotEmpty()) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+        ) {
+            WarningLines(held.value)
+        }
     }
 }
 
 @Composable
 private fun WarningLines(warnings: List<String>) {
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = Modifier.animateContentSize(sizing()).padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         warnings.forEach { warning -> WarningLine(warning) }

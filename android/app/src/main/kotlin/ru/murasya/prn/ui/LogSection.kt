@@ -1,8 +1,15 @@
 package ru.murasya.prn.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,10 +25,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -37,6 +48,10 @@ import ru.murasya.prn.domain.formatNumber
 /** Lines up the clock column so 09:05 and 14:22 share a left edge. */
 private const val TABULAR = "tnum"
 
+private const val BAR_WIDTH = 5
+private const val BAR_HEIGHT = 32
+private const val BAR_STRETCH = 1.22f
+
 /** One day of the log, rendered as a single rounded slab so the list reads as grouped, not ragged. */
 @Composable
 fun DaySection(
@@ -46,8 +61,9 @@ fun DaySection(
     zone: ZoneId,
     onTake: (Med) -> Unit,
     onEdit: (LogEntry) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Column {
+    Column(modifier = modifier) {
         Text(
             text = dayLabel(day, today),
             style = MaterialTheme.typography.labelLarge,
@@ -66,9 +82,9 @@ fun DaySection(
 
 @Composable
 private fun DayRows(entries: List<LogEntry>, zone: ZoneId, onTake: (Med) -> Unit, onEdit: (LogEntry) -> Unit) {
-    Column {
+    Column(modifier = Modifier.animateContentSize(sizing())) {
         entries.forEachIndexed { index, entry ->
-            LogRow(entry, zone, index > 0, onTake, onEdit)
+            key(entry.intake.id) { LogRow(entry, zone, index > 0, onTake, onEdit) }
         }
     }
 }
@@ -83,10 +99,13 @@ private fun LogRow(
     onEdit: (LogEntry) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
+    val interactions = remember { MutableInteractionSource() }
     val row =
         Modifier
             .fillMaxWidth()
             .combinedClickable(
+                interactionSource = interactions,
+                indication = LocalIndication.current,
                 onClickLabel = stringResource(R.string.editor_take),
                 onLongClickLabel = stringResource(R.string.editor_edit),
                 onClick = { onTake(entry.med) },
@@ -103,7 +122,7 @@ private fun LogRow(
             )
         }
         Row(modifier = row, verticalAlignment = Alignment.CenterVertically) {
-            ColorBar(entry.med.colorArgb)
+            ColorBar(entry.med.colorArgb, interactions)
             Spacer(Modifier.width(14.dp))
             EntryText(entry, Modifier.weight(1f))
             Text(
@@ -142,24 +161,34 @@ private fun entryDetail(entry: LogEntry): String = stringResource(R.string.dose_
  * the log is meant to be skimmed, not read.
  */
 @Composable
-private fun ColorBar(argb: Int) {
+private fun ColorBar(argb: Int, source: InteractionSource) {
+    val pressed by source.collectIsPressedAsState()
+    val color by animateColorAsState(Color(argb), animationSpec = effects(), label = "barColor")
+    val stretch by
+        animateFloatAsState(
+            targetValue = if (pressed) BAR_STRETCH else 1f,
+            animationSpec = spatial(),
+            label = "barStretch",
+        )
     Box(
         modifier =
             Modifier
-                .size(width = 5.dp, height = 32.dp)
+                .size(width = BAR_WIDTH.dp, height = BAR_HEIGHT.dp)
+                .graphicsLayer { scaleY = stretch }
                 .clip(CircleShape)
-                .background(Color(argb)),
+                .background(color),
     )
 }
 
 /** The medication's colour, the one thing that lets the eye group the log at a glance. */
 @Composable
 fun Swatch(argb: Int, size: Dp = 26.dp) {
+    val color by animateColorAsState(Color(argb), animationSpec = effects(), label = "swatch")
     Box(
         modifier =
             Modifier
                 .size(size)
                 .clip(CircleShape)
-                .background(Color(argb)),
+                .background(color),
     )
 }

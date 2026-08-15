@@ -1,5 +1,6 @@
 package ru.murasya.prn.ui
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import java.time.ZoneId
 import ru.murasya.prn.R
 import ru.murasya.prn.domain.MedState
+
+private const val COMMIT_PRESS_SCALE = 0.98f
 
 private enum class TimeTarget { NONE, TAKEN, WINDOW_START, WINDOW_END }
 
@@ -80,8 +83,10 @@ private fun EditorForm(
                 .imePadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = titleOf(editor.mode), style = MaterialTheme.typography.titleLarge)
-        EditorWarnings(medState, draft, now, zone)
+        Column {
+            Text(text = titleOf(editor.mode), style = MaterialTheme.typography.titleLarge)
+            EditorWarnings(medState, draft, now, zone)
+        }
         EditorFields(draft, zone, onDraftChange) { picking = it }
         EditorButtons(editor.mode, draft.valid, onCommit) { confirmingDelete = true }
     }
@@ -161,6 +166,7 @@ private fun WindowButtons(draft: MedDraft, onPick: (TimeTarget) -> Unit) {
 
 @Composable
 private fun EditorButtons(mode: EditorMode, valid: Boolean, onCommit: () -> Unit, onDelete: () -> Unit) {
+    val interactions = remember { MutableInteractionSource() }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -169,7 +175,12 @@ private fun EditorButtons(mode: EditorMode, valid: Boolean, onCommit: () -> Unit
         if (mode == EditorMode.EDIT) {
             TextButton(onClick = onDelete) { Text(stringResource(R.string.action_delete)) }
         }
-        Button(onClick = onCommit, enabled = valid, modifier = Modifier.weight(1f)) {
+        Button(
+            onClick = onCommit,
+            enabled = valid,
+            interactionSource = interactions,
+            modifier = Modifier.weight(1f).pressSquish(interactions, COMMIT_PRESS_SCALE),
+        ) {
             Text(stringResource(commitLabelOf(mode)))
         }
     }

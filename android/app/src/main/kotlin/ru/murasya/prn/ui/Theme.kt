@@ -10,6 +10,7 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
@@ -50,7 +51,9 @@ fun PrnTheme(content: @Composable () -> Unit) {
     val context = LocalContext.current
     val scheme =
         if (isSystemInDarkTheme()) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-    MaterialTheme(colorScheme = scheme, shapes = PRN_SHAPES, content = content)
+    CompositionLocalProvider(LocalReducedMotion provides rememberReducedMotion()) {
+        MaterialTheme(colorScheme = scheme, shapes = PRN_SHAPES, content = content)
+    }
 }
 
 /**

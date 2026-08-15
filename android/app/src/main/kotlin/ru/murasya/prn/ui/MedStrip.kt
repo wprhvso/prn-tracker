@@ -2,7 +2,9 @@ package ru.murasya.prn.ui
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,12 +13,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,30 +36,51 @@ import ru.murasya.prn.domain.formatNumber
 import ru.murasya.prn.text.relativeDuration
 
 private const val DUE_TINT = 0.22f
+private const val CARD_WIDTH = 190
 
 /** A compact always-on read of every medication: when the next dose is allowed and how much is
  * left. Tapping one is the fastest way to log another dose. */
 @Composable
-fun MedStrip(states: List<MedState>, now: Long, onTake: (Med) -> Unit, onEdit: (Med) -> Unit) {
+fun MedStrip(
+    states: List<MedState>,
+    now: Long,
+    from: Int,
+    onTake: (Med) -> Unit,
+    onEdit: (Med) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     LazyRow(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(horizontal = 2.dp),
     ) {
-        items(states, key = { it.med.id }) { state -> MedCard(state, now, onTake, onEdit) }
+        itemsIndexed(states, key = { _, state -> state.med.id }) { index, state ->
+            MedCard(state, now, onTake, onEdit, itemMotion(from + index))
+        }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun MedCard(state: MedState, now: Long, onTake: (Med) -> Unit, onEdit: (Med) -> Unit) {
+private fun MedCard(
+    state: MedState,
+    now: Long,
+    onTake: (Med) -> Unit,
+    onEdit: (Med) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val haptics = LocalHapticFeedback.current
+    val interactions = remember { MutableInteractionSource() }
     val accent = Color(state.med.colorArgb)
     val target = if (state.due) accent.copy(alpha = DUE_TINT) else MaterialTheme.colorScheme.surfaceContainer
-    val container by animateColorAsState(target, animationSpec = calmEffects(), label = "medCard")
+    val container by animateColorAsState(target, animationSpec = effects(), label = "medCard")
     val card =
-        Modifier
-            .width(190.dp)
+        modifier
+            .width(CARD_WIDTH.dp)
+            .pressSquish(interactions)
             .combinedClickable(
+                interactionSource = interactions,
+                indication = LocalIndication.current,
                 onClickLabel = stringResource(R.string.editor_take),
                 onLongClickLabel = stringResource(R.string.editor_edit),
                 onClick = { onTake(state.med) },
@@ -72,6 +96,8 @@ private fun MedCard(state: MedState, now: Long, onTake: (Med) -> Unit, onEdit: (
 
 @Composable
 private fun MedCardBody(state: MedState, now: Long, accent: Color) {
+    val idle = MaterialTheme.colorScheme.onSurfaceVariant
+    val status by animateColorAsState(if (state.due) accent else idle, animationSpec = effects(), label = "medStatus")
     Column(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -86,11 +112,7 @@ private fun MedCardBody(state: MedState, now: Long, accent: Color) {
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        Text(
-            text = statusText(state, now),
-            style = MaterialTheme.typography.labelLarge,
-            color = if (state.due) accent else MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        TickerText(text = statusText(state, now), style = MaterialTheme.typography.labelLarge, color = status)
         Text(
             text = metaText(state),
             style = MaterialTheme.typography.bodySmall,
