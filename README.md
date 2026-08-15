@@ -93,7 +93,17 @@ Requires [just](https://github.com/casey/just), a JDK 17+ and the Android SDK
 | `just fix` | same, with formatting applied |
 | `just install` | install the built APK over adb and launch it |
 
-Releases are cut by tagging: `just version 0.2.0 && just tag`.
+A release is a merged version bump, not a tag pushed by hand.
+[version-update-helper](https://github.com/Greewil/version-update-helper) reads
+`.vuh` and moves the version on your branch: `vuh sv` shows what this branch
+should be versioned as and `vuh uv` writes it into `android/app/build.gradle`
+(`just version 0.2.0` does the same by hand).
+
+`.github/workflows/cd.yml` runs on every push to `main`. It compares that
+`versionName` against the versions already released here and does nothing unless
+the declared one is strictly higher and its tag is still free. When it is, the
+workflow builds the APK, publishes a GitHub Release and tags the commit that was
+checked.
 
 ## Notes on the stack
 
