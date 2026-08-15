@@ -153,8 +153,7 @@ fun Modifier.pressSquish(source: InteractionSource, scale: Float = PRESS_SCALE):
 }
 
 @Composable
-fun Modifier.breathing(active: Boolean): Modifier =
-    if (active && !LocalReducedMotion.current) breathe() else this
+fun Modifier.breathing(active: Boolean): Modifier = if (active && !LocalReducedMotion.current) breathe() else this
 
 @Composable
 private fun Modifier.breathe(): Modifier {
