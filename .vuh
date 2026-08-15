@@ -13,3 +13,15 @@ IS_INCREMENT_REQUIRED_ONLY_ON_CHANGES='true'
 MINOR_CHANGING_LOCATIONS=''
 
 MAJOR_CHANGING_LOCATIONS=''
+
+# versionCode is the one number vuh does not track: Android wants it monotonic
+# rather than meaningful. It moves with versionName, and only when versionName
+# actually moved — vuh calls this even when the version was already up to date.
+function after_successful_version_update() {
+  old_version=$1
+  new_version=$2
+  [ "$old_version" = "$new_version" ] && return 0
+  gradle="$ROOT_REPO_DIR/android/app/build.gradle"
+  code=$(sed -n 's/.*versionCode \([0-9]*\).*/\1/p' "$gradle")
+  sed -i "s/versionCode .*/versionCode $((code + 1))/" "$gradle"
+}

@@ -96,8 +96,9 @@ Requires [just](https://github.com/casey/just), a JDK 17+ and the Android SDK
 A release is a merged version bump, not a tag pushed by hand.
 [version-update-helper](https://github.com/Greewil/version-update-helper) reads
 `.vuh` and moves the version on your branch: `vuh sv` shows what this branch
-should be versioned as and `vuh uv` writes it into `android/app/build.gradle`
-(`just version 0.2.0` does the same by hand).
+should be versioned as and `vuh uv` writes it into `android/app/build.gradle`.
+`.vuh` also carries an `after_successful_version_update` hook, so the
+`versionCode` that Android wants monotonic moves along with `versionName`.
 
 `.github/workflows/cd.yml` runs on every push to `main`. It compares that
 `versionName` against the versions already released here and does nothing unless
