@@ -21,13 +21,6 @@ version new="":
     sed -i "s/versionCode .*/versionCode $((code + 1))/" "$gradle"
     echo "$cur -> $new"
 
-tag:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    v="$(just version)"
-    git tag "v$v"
-    git push origin "v$v"
-
 check-version:
     #!/usr/bin/env bash
     set -euo pipefail

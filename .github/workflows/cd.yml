@@ -2,8 +2,8 @@ name: cd
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -15,10 +15,127 @@ concurrency:
 
 env:
   ANDROID_SDK_HOME: /usr/local/lib/android/sdk
+  GRADLE_VERSION: "9.7.0"
 
 jobs:
+  # A published release is the one step here that cannot be taken back: the tag
+  # it writes names a commit for good, and whoever already downloaded the APK
+  # under that name has it. Nothing goes out before the same checks that guard
+  # a commit have passed on the commit being released.
+  kotlin:
+    runs-on: nested
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: wprhvso/qa-kotlin@v1
+        with:
+          working-directory: android
+
+  check:
+    runs-on: nested
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: actions/cache@v4
+        id: sdk-cache
+        with:
+          path: |
+            ${{ env.ANDROID_SDK_HOME }}/platforms/android-37.0
+            ${{ env.ANDROID_SDK_HOME }}/build-tools/37.0.0
+          key: android-sdk-37.0
+
+      - uses: android-actions/setup-android@v3
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        with:
+          packages: "platforms;android-37.0 build-tools;37.0.0"
+
+      - uses: wprhvso/qa-kotlin@v1
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+        with:
+          checks: test,build
+          working-directory: android
+          gradle-version: ${{ env.GRADLE_VERSION }}
+          setup-java: "false"
+
+  # Every push to main lands here, and almost none of them are releases. The
+  # repository's own releases are the record of what has already shipped: a push
+  # releases only when the versionName that android/app/build.gradle declares is
+  # strictly higher than every version already released, which makes a release
+  # exactly a merged version bump. .vuh is what produces those bumps, so the
+  # file this reads is the same file `vuh uv` writes.
+  version:
+    runs-on: nested
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      prerelease: ${{ steps.read.outputs.prerelease }}
+      release: ${{ steps.read.outputs.release }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: read
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          declared=$(sed -n 's/.*versionName "\(.*\)".*/\1/p' android/app/build.gradle)
+          if [ -z "$declared" ]; then
+            echo "no versionName in android/app/build.gradle" >&2
+            exit 1
+          fi
+          echo "version=$declared" >> "$GITHUB_OUTPUT"
+
+          # Only digits and dots is a release; anything else is a candidate or a
+          # snapshot and must not become what GitHub hands out as "latest".
+          case "$declared" in
+            *[!0-9.]*) prerelease=true ;;
+            *) prerelease=false ;;
+          esac
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+
+          # A repository that has never released returns an empty list, in which
+          # case anything is newer. Ordering is sort -V's, so 0.2.10 is above
+          # 0.2.9 rather than below it.
+          published=$(
+            for page in 1 2 3; do
+              curl -fsS \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/$GITHUB_REPOSITORY/releases?per_page=100&page=$page"
+            done | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 | sed 's/^v//'
+          )
+          highest=$(printf '%s\n' $published | sort -V | tail -n1)
+
+          if [ -z "$highest" ]; then
+            release=true
+          elif [ "$declared" = "$highest" ]; then
+            release=false
+          elif [ "$(printf '%s\n%s\n' "$declared" "$highest" | sort -V | tail -n1)" = "$declared" ]; then
+            release=true
+          else
+            release=false
+          fi
+
+          # A draft release holds its tag without appearing in the list above,
+          # and a tag that exists already points at a commit that is not this
+          # one. Either way the name is taken and nothing may be written over it.
+          if git ls-remote --exit-code --tags origin "refs/tags/v$declared" >/dev/null 2>&1; then
+            release=false
+          fi
+
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "$declared vs released ${highest:-none} -> release=$release" >&2
+
   android:
     runs-on: nested
+    needs: [kotlin, check, version]
+    if: needs.version.outputs.release == 'true'
     steps:
       - uses: actions/checkout@v7
 
@@ -42,13 +159,13 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v5
         with:
-          gradle-version: "9.7.0"
+          gradle-version: ${{ env.GRADLE_VERSION }}
 
       - uses: extractions/setup-just@v4
 
       - name: Build
         env:
-          VERSION: ${{ github.ref_name }}
+          VERSION: v${{ needs.version.outputs.version }}
           GRADLE_OPTS: -Dorg.gradle.daemon=false
         run: just build
 
@@ -60,9 +177,12 @@ jobs:
           compression-level: 0
           retention-days: 1
 
+  # The tag is a record of what shipped, so it is written by the release itself,
+  # at the commit whose checks passed, and only once the APK exists to attach.
   release:
     runs-on: nested
-    needs: [android]
+    needs: [version, android]
+    if: needs.version.outputs.release == 'true'
     permissions:
       contents: write
     steps:
@@ -73,6 +193,9 @@ jobs:
 
       - uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: v${{ needs.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          prerelease: ${{ needs.version.outputs.prerelease == 'true' }}
+          make_latest: ${{ needs.version.outputs.prerelease == 'false' }}
           files: dist/*
           fail_on_unmatched_files: true
