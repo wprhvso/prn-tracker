@@ -6,28 +6,13 @@ app := "ru.murasya.prn"
 default:
     just --list
 
-version new="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    gradle=android/app/build.gradle
-    cur="$(sed -n 's/.*versionName "\(.*\)".*/\1/p' "$gradle")"
-    if [ -z "{{new}}" ]; then
-        echo "$cur"
-        exit 0
-    fi
-    new="$(echo "{{new}}" | sed 's/^v//')"
-    code="$(sed -n 's/.*versionCode \([0-9]*\).*/\1/p' "$gradle")"
-    sed -i "s/versionName \".*\"/versionName \"$new\"/" "$gradle"
-    sed -i "s/versionCode .*/versionCode $((code + 1))/" "$gradle"
-    echo "$cur -> $new"
-
 check-version:
     #!/usr/bin/env bash
     set -euo pipefail
     if [ "{{ver}}" = "dev" ]; then
         exit 0
     fi
-    cur="v$(just version)"
+    cur="v$(sed -n 's/.*versionName "\(.*\)".*/\1/p' android/app/build.gradle)"
     if [ "$cur" != "{{ver}}" ]; then
         echo "version mismatch: build.gradle=$cur VERSION={{ver}}" >&2
         exit 1
@@ -38,7 +23,7 @@ build: check-version
     set -euo pipefail
     shopt -s nullglob
     gradle -p android :app:assembleRelease
-    v="$(just version)"
+    v="$(sed -n 's/.*versionName "\(.*\)".*/\1/p' android/app/build.gradle)"
     out=android/app/build/outputs/apk/release
     apks=("$out"/app-release.apk)
     if [ "${#apks[@]}" -eq 0 ]; then
