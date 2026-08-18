@@ -19,7 +19,7 @@ env:
 
 jobs:
   kotlin:
-    runs-on: nested
+    runs-on: pool
     steps:
       - uses: actions/checkout@v7
 
@@ -28,7 +28,7 @@ jobs:
           working-directory: android
 
   android:
-    runs-on: nested
+    runs-on: pool
     steps:
       - uses: actions/checkout@v7
 

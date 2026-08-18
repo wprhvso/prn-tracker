@@ -23,7 +23,7 @@ jobs:
   # under that name has it. Nothing goes out before the same checks that guard
   # a commit have passed on the commit being released.
   kotlin:
-    runs-on: nested
+    runs-on: pool
     steps:
       - uses: actions/checkout@v7
 
@@ -32,7 +32,7 @@ jobs:
           working-directory: android
 
   check:
-    runs-on: nested
+    runs-on: pool
     steps:
       - uses: actions/checkout@v7
 
@@ -70,7 +70,7 @@ jobs:
   # exactly a merged version bump. .vuh is what produces those bumps, so the
   # file this reads is the same file `vuh uv` writes.
   version:
-    runs-on: nested
+    runs-on: pool
     outputs:
       version: ${{ steps.read.outputs.version }}
       prerelease: ${{ steps.read.outputs.prerelease }}
@@ -133,7 +133,7 @@ jobs:
           echo "$declared vs released ${highest:-none} -> release=$release" >&2
 
   android:
-    runs-on: nested
+    runs-on: pool
     needs: [kotlin, check, version]
     if: needs.version.outputs.release == 'true'
     steps:
@@ -180,7 +180,7 @@ jobs:
   # The tag is a record of what shipped, so it is written by the release itself,
   # at the commit whose checks passed, and only once the APK exists to attach.
   release:
-    runs-on: nested
+    runs-on: pool
     needs: [version, android]
     if: needs.version.outputs.release == 'true'
     permissions:
