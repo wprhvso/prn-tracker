@@ -7,10 +7,6 @@ import androidx.room3.Query
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
 
-/**
- * The whole data access layer. The data set is tiny — a handful of medications and their intakes —
- * so everything is read wholesale and joined in Kotlin instead of in SQL.
- */
 @Dao
 interface PrnDao {
     @Query("SELECT * FROM med ORDER BY name COLLATE NOCASE")
@@ -49,7 +45,6 @@ interface PrnDao {
     @Query("SELECT * FROM intake WHERE id = :id")
     suspend fun intake(id: Long): Intake?
 
-    /** A null stock means "not counting", and `MAX` of a null is null, so it stays that way. */
     @Query("UPDATE med SET stockMg = MAX(stockMg - :mg, 0) WHERE id = :id")
     suspend fun spendStock(id: Long, mg: Double)
 

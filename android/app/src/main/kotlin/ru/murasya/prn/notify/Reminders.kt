@@ -8,11 +8,6 @@ import ru.murasya.prn.domain.medStates
 import ru.murasya.prn.domain.nextWakeAt
 import ru.murasya.prn.domain.notifiableAlerts
 
-/**
- * Recomputes the whole reminder state from the database and applies it: the shade is brought in
- * line with the current alerts and the next alarm is armed. Every entry point — the alarm, boot,
- * and each edit made in the app — funnels through here, so there is only one source of truth.
- */
 suspend fun refreshReminders(context: Context) {
     val app = context.applicationContext
     val dao = PrnDatabase.get(app).dao()
@@ -28,7 +23,6 @@ suspend fun refreshReminders(context: Context) {
     scheduleNextTick(app, nextWakeAt(states))
 }
 
-/** Logs a dose straight from a notification action, spending one from stock. */
 suspend fun takeDose(context: Context, medId: Long) {
     val dao = PrnDatabase.get(context.applicationContext).dao()
     val med = dao.med(medId) ?: return

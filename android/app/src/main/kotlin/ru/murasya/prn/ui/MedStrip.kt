@@ -38,8 +38,6 @@ import ru.murasya.prn.text.relativeDuration
 private const val DUE_TINT = 0.22f
 private const val CARD_WIDTH = 190
 
-/** A compact always-on read of every medication: when the next dose is allowed and how much is
- * left. Tapping one is the fastest way to log another dose. */
 @Composable
 fun MedStrip(
     states: List<MedState>,

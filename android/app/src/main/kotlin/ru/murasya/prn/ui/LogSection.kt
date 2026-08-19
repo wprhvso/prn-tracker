@@ -45,14 +45,12 @@ import ru.murasya.prn.R
 import ru.murasya.prn.data.Med
 import ru.murasya.prn.domain.formatNumber
 
-/** Lines up the clock column so 09:05 and 14:22 share a left edge. */
 private const val TABULAR = "tnum"
 
 private const val BAR_WIDTH = 5
 private const val BAR_HEIGHT = 32
 private const val BAR_STRETCH = 1.22f
 
-/** One day of the log, rendered as a single rounded slab so the list reads as grouped, not ragged. */
 @Composable
 fun DaySection(
     day: LocalDate,
@@ -156,10 +154,6 @@ private fun EntryText(entry: LogEntry, modifier: Modifier = Modifier) {
 @Composable
 private fun entryDetail(entry: LogEntry): String = stringResource(R.string.dose_mg, formatNumber(entry.intake.doseMg))
 
-/**
- * A bar rather than a dot: down a column of rows the eye follows a vertical stripe far faster, and
- * the log is meant to be skimmed, not read.
- */
 @Composable
 private fun ColorBar(argb: Int, source: InteractionSource) {
     val pressed by source.collectIsPressedAsState()
@@ -180,7 +174,6 @@ private fun ColorBar(argb: Int, source: InteractionSource) {
     )
 }
 
-/** The medication's colour, the one thing that lets the eye group the log at a glance. */
 @Composable
 fun Swatch(argb: Int, size: Dp = 26.dp) {
     val color by animateColorAsState(Color(argb), animationSpec = effects(), label = "swatch")

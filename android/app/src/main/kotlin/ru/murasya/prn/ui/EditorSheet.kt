@@ -35,13 +35,6 @@ private const val COMMIT_PRESS_SCALE = 0.98f
 
 private enum class TimeTarget { NONE, TAKEN, WINDOW_START, WINDOW_END }
 
-/**
- * The one place anything is created or changed. It opens blank from the plus button, pre-filled
- * from a tap, and pre-filled with the intake itself from a long press.
- *
- * The form is laid out to fit without scrolling: paired fields share a row, the hint under every
- * field is gone now that the labels say the same thing, and the colour sliders stay folded away.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorSheet(
@@ -141,11 +134,6 @@ private fun EditorFields(draft: MedDraft, zone: ZoneId, onChange: (MedDraft) -> 
     ColorPicker(selected = draft.colorArgb, onSelect = { onChange(draft.copy(colorArgb = it)) })
 }
 
-/**
- * The hours reminders keep to. Always on show, with no switch guarding them: two equal times mean
- * "any hour", which is both the answer for a medication that does not care and the state a fresh
- * one starts in, so the switch had nothing left to say.
- */
 @Composable
 private fun WindowButtons(draft: MedDraft, onPick: (TimeTarget) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
@@ -213,10 +201,6 @@ private fun TimePickers(
     )
 }
 
-/**
- * Long-pressing a log row offers to delete that one entry; long-pressing a medication card offers
- * to delete the medication. The gesture already said which one the user meant.
- */
 @Composable
 private fun DeleteDialog(draft: MedDraft, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val entry = draft.intakeId != 0L

@@ -26,7 +26,7 @@ private fun med(
 )
 
 class MedDraftTest {
-    /** The switch is gone, so this pair of equal times is the only thing left saying "any hour". */
+
     @Test
     fun equalWindowTimesMeanNoWindow() {
         val saved = draftOf(med(), null, NOW).copy(name = "Test").toMed()
@@ -51,7 +51,6 @@ class MedDraftTest {
         assertEquals(1320, saved.windowEndMinute)
     }
 
-    /** The plan belongs to the medication; the dose typed over it belongs to this one intake. */
     @Test
     fun thePlanIsWhatTheMedicationKeeps() {
         val draft = draftOf(med(), null, NOW).copy(doseMg = "150")
@@ -73,7 +72,6 @@ class MedDraftTest {
         assertEquals(50.0, draft.takenMg, 1e-9)
     }
 
-    /** Blank stock is "not counting"; zero is "counted, and there is none". */
     @Test
     fun blankStockIsUntrackedAndZeroIsEmpty() {
         assertNull(draftOf(med(stockMg = null), null, NOW).toMed().stockMg)

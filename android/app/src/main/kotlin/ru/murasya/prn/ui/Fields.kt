@@ -80,7 +80,6 @@ private const val RING_CHOSEN = 3
 private const val RING_IDLE = 1
 private const val CHECK_SIZE = 18
 
-/** The six primaries plus the wrap back to red: hue is linear, so the gradient between them is exact. */
 private val HUE_STOPS: List<Color> = List(7) { step -> Color.hsv(step * HUE_SECTOR, 1f, 1f) }
 
 @Composable
@@ -96,7 +95,6 @@ fun PlainField(label: String, value: String, onValueChange: (String) -> Unit, mo
     )
 }
 
-/** A number the user may leave blank; blank always means "this feature is off". */
 @Composable
 fun NumberField(
     label: String,
@@ -120,12 +118,6 @@ fun NumberField(
     )
 }
 
-/**
- * A scrolling row of swatches for the common case, and behind a toggle the picker everyone already
- * knows: a shade field with a hue bar under it. Three abstract sliders asked the user to think in
- * coordinates; this asks them to point at the colour they want. It still reaches the greys, white
- * and black that a fixed palette cannot, and it stays folded away so the form keeps its height.
- */
 @Composable
 fun ColorPicker(selected: Int, onSelect: (Int) -> Unit) {
     val start = remember { hsvOf(selected) }
@@ -181,16 +173,6 @@ private fun SwatchRow(selected: Int, modifier: Modifier = Modifier, onSelect: (I
     }
 }
 
-/**
- * Saturation left to right, brightness top to bottom, over the currently chosen hue — two channels
- * picked with one finger. Tap and drag are separate `pointerInput` blocks because a single one only
- * ever runs one detector; declaring the drag last is what lets it measure its slop before the tap
- * handler consumes the press.
- *
- * The gesture blocks are keyed on [Unit] so a drag survives recomposition, which means they hold
- * whichever [onChange] they were built with — [rememberUpdatedState] is what keeps that from being
- * the one from the first frame, editing a copy of the form as it stood before the drag began.
- */
 @Composable
 private fun ShadeField(hue: Float, saturation: Float, brightness: Float, onChange: (Float, Float) -> Unit) {
     val latest by rememberUpdatedState(onChange)
@@ -226,7 +208,6 @@ private fun ShadeField(hue: Float, saturation: Float, brightness: Float, onChang
     }
 }
 
-/** The full spectrum. Hue is linear across the bar, so seven evenly spaced stops draw it exactly. */
 @Composable
 private fun HueBar(hue: Float, onChange: (Float) -> Unit) {
     val latest by rememberUpdatedState(onChange)
@@ -252,7 +233,6 @@ private fun HueBar(hue: Float, onChange: (Float) -> Unit) {
     }
 }
 
-/** White on black so the ring stays visible over every colour underneath it. */
 private fun DrawScope.marker(at: Offset) {
     val radius = MARKER_RADIUS.dp.toPx()
     drawCircle(Color.Black, radius, at, style = Stroke(width = 3.dp.toPx()))
@@ -306,10 +286,6 @@ fun TimeButton(label: String, minuteOfDay: Int, onClick: () -> Unit, modifier: M
     }
 }
 
-/**
- * The dial first, because that is how people read a clock, with a keyboard mode one tap away for
- * anyone who would rather type. Both halves are the platform's own pickers.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrnTimePickerDialog(title: String, initialMinuteOfDay: Int, onDismiss: () -> Unit, onConfirm: (Int) -> Unit) {
@@ -367,7 +343,6 @@ private fun hsvOf(argb: Int): FloatArray {
     return hsv
 }
 
-/** [Color.hsv] throws on anything out of range, and a drag that runs a pixel past the edge is out. */
 private fun argbOf(hue: Float, saturation: Float, brightness: Float): Int =
     Color
         .hsv(

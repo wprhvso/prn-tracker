@@ -65,7 +65,6 @@ class ScheduleTest {
         assertEquals(at(9, day = 11), alignToWindow(at(23), 540, 1320, ZONE))
     }
 
-    /** Adding minutes to midnight would open a 09:00 window at 10:00 on the day the clocks move. */
     @Test
     fun springForwardDoesNotDragTheWindow() {
         val berlin = ZoneId.of("Europe/Berlin")
@@ -85,7 +84,6 @@ class ScheduleTest {
         assertEquals(at(16), nextDueAt(med(intervalHours = 6.0), at(10)))
     }
 
-    /** Eligibility is a fact about the drug: the allowed hours may delay the reminder, never this. */
     @Test
     fun theAllowedHoursDoNotMoveTheDueDate() {
         val subject = med(intervalHours = 6.0, windowStartMinute = 540, windowEndMinute = 1320)

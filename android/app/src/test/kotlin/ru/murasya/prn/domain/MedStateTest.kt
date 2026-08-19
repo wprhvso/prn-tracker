@@ -73,7 +73,6 @@ class MedStateTest {
         }
     }
 
-    /** Outside its hours a dose is still allowed — the app says so, the notification waits. */
     @Test
     fun outsideTheWindowTheDoseIsDueOnScreenButSilent() {
         val subject = med(windowStartMinute = 540, windowEndMinute = 1320)
@@ -102,7 +101,6 @@ class MedStateTest {
         assertNull(nextWakeAt(listOf(state)))
     }
 
-    /** The dose is 100 mg, so "three doses left" is anything under 300 mg. */
     @Test
     fun stockThresholdsRaiseExactlyOneStockAlert() {
         val now = moment(11)
@@ -137,10 +135,6 @@ class MedStateTest {
         assertEquals(listOf(AlertKind.OUT_OF_STOCK, AlertKind.DUE), alerts(states).map { it.kind })
     }
 
-    /**
-     * The screen is ordered by how soon something needs a decision. A drug with no schedule can
-     * never be late, so however recently it was taken it comes after one that is nearly due.
-     */
     @Test
     fun theMostUrgentMedicationComesFirst() {
         val now = moment(12)
@@ -158,7 +152,6 @@ class MedStateTest {
         assertEquals(listOf(2L, 1L), alerts(states).map { it.state.med.id })
     }
 
-    /** A dose that is allowed but out of hours still outranks one that is not allowed yet. */
     @Test
     fun aDoseOutsideItsHoursStillBeatsOneThatIsNotDue() {
         val now = moment(23)

@@ -20,10 +20,6 @@ fun timeLabel(at: Long, zone: ZoneId): String = TIME_FORMAT.format(Instant.ofEpo
 
 fun minuteOfDayOf(at: Long, zone: ZoneId): Int = minuteOfDay(at, zone)
 
-/**
- * Moves [at] to a different time of day. A time that would land in the future is read as yesterday,
- * which is what someone means when they log a 23:40 dose at half past midnight.
- */
 fun withTimeOfDay(at: Long, minuteOfDay: Int, zone: ZoneId, notAfter: Long): Long {
     val midnight =
         Instant

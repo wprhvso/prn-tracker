@@ -17,10 +17,6 @@ env:
   GRADLE_VERSION: "9.7.0"
 
 jobs:
-  # A published release is the one step here that cannot be taken back: the tag
-  # it writes names a commit for good, and whoever already downloaded the APK
-  # under that name has it. Nothing goes out before the same checks that guard
-  # a commit have passed on the commit being released.
   kotlin:
     runs-on: pool
     steps:
@@ -44,12 +40,6 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
           setup-java: "false"
 
-  # Every push to main lands here, and almost none of them are releases. The
-  # repository's own releases are the record of what has already shipped: a push
-  # releases only when the versionName that android/app/build.gradle declares is
-  # strictly higher than every version already released, which makes a release
-  # exactly a merged version bump. .vuh is what produces those bumps, so the
-  # file this reads is the same file `vuh uv` writes.
   version:
     runs-on: pool
     outputs:
@@ -134,8 +124,6 @@ jobs:
           compression-level: 0
           retention-days: 1
 
-  # The tag is a record of what shipped, so it is written by the release itself,
-  # at the commit whose checks passed, and only once the APK exists to attach.
   release:
     runs-on: pool
     needs: [version, android]

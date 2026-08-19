@@ -6,7 +6,6 @@ import kotlin.math.roundToLong
 
 private const val CENTS = 100.0
 
-/** Splits a duration into whole days, hours and minutes; the sign is dropped. */
 data class DurationParts(
     val days: Long,
     val hours: Long,
@@ -22,7 +21,6 @@ fun durationParts(millis: Long): DurationParts {
     )
 }
 
-/** Trims a trailing `.0` so 500 mg reads as "500" while 2.5 mg keeps its half. */
 fun formatNumber(value: Double): String {
     val rounded = (value * CENTS).roundToLong() / CENTS
     if (rounded == rounded.toLong().toDouble()) return rounded.toLong().toString()
@@ -30,7 +28,6 @@ fun formatNumber(value: Double): String {
     return if (text.endsWith('0')) text.dropLast(1) else text
 }
 
-/** Minutes since midnight as `09:30`. */
 fun formatMinuteOfDay(minute: Int): String =
     String.format(
         Locale.getDefault(),

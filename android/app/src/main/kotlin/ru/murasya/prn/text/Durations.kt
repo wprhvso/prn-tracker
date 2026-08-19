@@ -4,7 +4,6 @@ import android.content.Context
 import ru.murasya.prn.R
 import ru.murasya.prn.domain.durationParts
 
-/** A coarse duration: at most the two largest non-zero units, e.g. `2 d 3 h` or `45 m`. */
 fun shortDuration(context: Context, millis: Long): String {
     val (days, hours, minutes) = durationParts(millis)
     return when {
@@ -15,7 +14,6 @@ fun shortDuration(context: Context, millis: Long): String {
     }
 }
 
-/** `in 2 h 15 m` for the future, `2 h 15 m ago` for the past. */
 fun relativeDuration(context: Context, from: Long, to: Long): String {
     val delta = to - from
     val text = shortDuration(context, delta)

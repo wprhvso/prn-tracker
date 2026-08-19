@@ -46,7 +46,6 @@ import java.time.ZoneId
 import ru.murasya.prn.R
 import ru.murasya.prn.data.Med
 
-/** Enough room under the last row that the floating button never covers it. */
 private const val FAB_CLEARANCE = 88
 private const val FAB_PRESS_SCALE = 0.92f
 
@@ -91,7 +90,6 @@ fun PrnScreen(viewModel: PrnViewModel = viewModel()) {
     Editor(editor, state, zone, viewModel)
 }
 
-/** A dose logged in one tap deserves to be un-logged in one tap. */
 @Composable
 private fun UndoBar(state: PrnUiState, viewModel: PrnViewModel, host: SnackbarHostState) {
     val logged by viewModel.undoableIntake.collectAsStateWithLifecycle()
@@ -136,10 +134,6 @@ private fun Editor(editor: EditorState?, state: PrnUiState, zone: ZoneId, viewMo
     )
 }
 
-/**
- * Deliberately the compact bar. A collapsing one turns every screen into a scrolling screen,
- * because the bar itself always has somewhere to go even when the list does not.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PrnTopBar(list: LazyListState) {

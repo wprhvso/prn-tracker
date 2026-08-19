@@ -26,11 +26,6 @@ import ru.murasya.prn.domain.formatMinuteOfDay
 import ru.murasya.prn.domain.inWindow
 import ru.murasya.prn.text.relativeDuration
 
-/**
- * The warnings live here rather than in the notification shade on purpose: they only matter at the
- * moment someone is about to take a dose, and pushing them would mean nagging a person who has
- * already stopped.
- */
 @Composable
 fun EditorWarnings(state: MedState?, draft: MedDraft, now: Long, zone: ZoneId) {
     val warnings =
@@ -83,7 +78,7 @@ private fun earlyWarning(state: MedState?, now: Long): String? {
 private fun windowWarning(draft: MedDraft, now: Long, zone: ZoneId): String? {
     val start = draft.windowStartMinute
     val end = draft.windowEndMinute
-    // Equal times mean "any hour", and inWindow already reads them that way, so this stays quiet.
+
     if (inWindow(now, start, end, zone)) return null
     val range = stringResource(R.string.window_range, formatMinuteOfDay(start), formatMinuteOfDay(end))
     return stringResource(R.string.warn_window, range)

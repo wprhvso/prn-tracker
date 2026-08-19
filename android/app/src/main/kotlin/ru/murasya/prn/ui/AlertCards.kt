@@ -34,7 +34,6 @@ import ru.murasya.prn.text.shortDuration
 
 private const val ICON_SIZE = 24
 
-/** Everything the notifications say, said again on the home screen where it cannot be missed. */
 @Composable
 fun AlertCard(alert: Alert, now: Long, onTake: (Med) -> Unit, modifier: Modifier = Modifier) {
     Banner(

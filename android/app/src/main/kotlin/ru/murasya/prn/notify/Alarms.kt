@@ -16,10 +16,6 @@ const val EXTRA_MED_ID = "medId"
 private const val TAG = "PrnAlarms"
 private const val REQUEST_TICK = 1
 
-/**
- * Arms the single alarm that drives every reminder. One alarm for the whole app is enough: when it
- * fires, the receiver recomputes every medication and arms the next one.
- */
 fun scheduleNextTick(context: Context, at: Long?) {
     val manager = context.getSystemService(AlarmManager::class.java) ?: return
     val pending = tickIntent(context)
@@ -34,17 +30,15 @@ fun scheduleNextTick(context: Context, at: Long?) {
             manager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending)
         }
     } catch (e: SecurityException) {
-        // The grant can be pulled between the check and the call; a late reminder beats a crash.
+
         Log.w(TAG, "exact alarm refused, falling back to inexact", e)
         manager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending)
     }
 }
 
-/** False when the user revoked exact alarms, which downgrades reminders to "roughly on time". */
 fun canScheduleExact(context: Context): Boolean =
     context.getSystemService(AlarmManager::class.java)?.canScheduleExactAlarms() ?: false
 
-/** Opens the per-app "Alarms & reminders" screen; false when the device has no such screen. */
 fun requestExactAlarms(context: Context): Boolean {
     val intent =
         Intent(

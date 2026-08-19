@@ -24,7 +24,6 @@ import ru.murasya.prn.R
 import ru.murasya.prn.notify.canScheduleExact
 import ru.murasya.prn.notify.requestExactAlarms
 
-/** What the reminders need from the system, and how to go ask for it. */
 class PermissionState(
     val notifications: Boolean,
     val exactAlarms: Boolean,
@@ -32,10 +31,6 @@ class PermissionState(
     val askExactAlarms: () -> Unit,
 )
 
-/**
- * Re-checked on every resume, because both of these can be flipped in Settings behind the app's
- * back and there is no callback for that.
- */
 @Composable
 fun rememberPermissionState(): PermissionState {
     val context = LocalContext.current

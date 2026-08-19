@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
-/** The swatches offered for a medication: one per hue, then the neutrals a hue wheel cannot reach. */
 val MED_COLORS: List<Int> =
     listOf(
         0xFFE45B5B,
@@ -56,17 +55,10 @@ fun PrnTheme(content: @Composable () -> Unit) {
     }
 }
 
-/**
- * Motion for anything that moves or resizes: slightly under-damped, so it settles with a nudge of
- * overshoot instead of gliding to a dead stop.
- */
 fun <T> springySpatial(): SpringSpec<T> = spring(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow)
 
-/** Motion for colour and opacity, which must never overshoot or it reads as a flicker. */
 fun <T> calmEffects(): SpringSpec<T> = spring(dampingRatio = 1f, stiffness = Spring.StiffnessMedium)
 
-/** Black or white, whichever stays legible on top of a medication swatch. */
 fun onSwatch(swatch: Color): Color = if (swatch.luminance() > 0.5f) Color.Black else Color.White
 
-/** The next unused swatch, so a new medication does not collide with an existing one. */
 fun nextColor(used: List<Int>): Int = MED_COLORS.firstOrNull { it !in used } ?: MED_COLORS[used.size % MED_COLORS.size]

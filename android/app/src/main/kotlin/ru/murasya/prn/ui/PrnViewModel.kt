@@ -22,11 +22,9 @@ import ru.murasya.prn.domain.alerts
 import ru.murasya.prn.domain.medStates
 import ru.murasya.prn.notify.refreshReminders
 
-/** How often the screen re-reads the clock so "in 2 h" and "due now" stay honest. */
 private const val TICK_MS = 20_000L
 private const val KEEP_ALIVE_MS = 5_000L
 
-/** One row of the log: the intake and the medication it belongs to. */
 data class LogEntry(
     val intake: Intake,
     val med: Med,
@@ -84,7 +82,6 @@ class PrnViewModel(
         editorState.value = EditorState(EditorMode.EDIT, draftOf(med, intake, now))
     }
 
-    /** Re-arms alarms and re-syncs the shade; cheap, idempotent, and run every time we come back. */
     fun refresh() {
         viewModelScope.launch { refreshReminders(app) }
     }
@@ -97,7 +94,6 @@ class PrnViewModel(
         editorState.value = null
     }
 
-    /** Saves the medication and, unless we are only editing, records that a dose was just taken. */
     fun commit(mode: EditorMode, draft: MedDraft) =
         edit {
             val med = draft.toMed()
@@ -115,7 +111,6 @@ class PrnViewModel(
             }
         }
 
-    /** One-tap logging from an alert card. The undo hook is what makes a mis-tap harmless. */
     fun take(medId: Long) =
         edit {
             val med = dao.med(medId) ?: return@edit
@@ -141,7 +136,6 @@ class PrnViewModel(
             dao.med(medId)?.let { dao.deleteMed(it) }
         }
 
-    /** Removing a single mistaken entry puts its own milligrams back in the tin. */
     fun deleteIntake(intakeId: Long, medId: Long) =
         edit {
             val taken = dao.intake(intakeId)?.doseMg
@@ -155,10 +149,6 @@ class PrnViewModel(
         return id
     }
 
-    /**
-     * Stock is milligrams now, so correcting a dose has to move the tin by the difference — leaving
-     * it alone would let the number drift every time a half or a double got fixed after the fact.
-     */
     private suspend fun updateIntake(draft: MedDraft, medId: Long) {
         if (draft.intakeId == 0L) return
         val was = dao.intake(draft.intakeId)?.doseMg

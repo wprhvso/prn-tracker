@@ -5,7 +5,6 @@ import androidx.room3.ForeignKey
 import androidx.room3.Index
 import androidx.room3.PrimaryKey
 
-/** A single logged intake. The main screen is a reverse-chronological list of these. */
 @Entity(
     tableName = "intake",
     foreignKeys = [
@@ -23,6 +22,6 @@ data class Intake(
     val id: Long = 0,
     val medId: Long,
     val takenAt: Long,
-    /** Dose actually taken, in milligrams. Kept per intake so history stays honest after edits. */
+
     val doseMg: Double,
 )

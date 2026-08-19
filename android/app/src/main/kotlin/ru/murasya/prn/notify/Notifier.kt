@@ -16,10 +16,6 @@ import ru.murasya.prn.domain.formatNumber
 import ru.murasya.prn.text.shortDuration
 import ru.murasya.prn.ui.MainActivity
 
-/**
- * Channel ids carry a version because a channel's importance, sound and vibration are frozen the
- * moment it is created — changing them later means shipping a new id.
- */
 private const val CHANNEL_DOSE = "dose_v1"
 private const val CHANNEL_STOCK = "stock_v1"
 private const val REQUEST_OPEN = 100
@@ -30,10 +26,6 @@ fun ensureChannels(context: Context) {
     manager.createNotificationChannels(listOf(doseChannel(context), stockChannel(context)))
 }
 
-/**
- * Makes the shade match [alerts] exactly: everything that still applies is re-posted so it alerts
- * again, everything that stopped applying is pulled. Re-posting is what makes the reminder nag.
- */
 fun syncNotifications(context: Context, alerts: List<Alert>) {
     val manager = context.getSystemService(NotificationManager::class.java) ?: return
     val pushed = alerts.associateBy(::notificationId)
@@ -44,7 +36,6 @@ fun syncNotifications(context: Context, alerts: List<Alert>) {
     pushed.forEach { (id, alert) -> manager.notify(id, build(context, alert)) }
 }
 
-/** Notification ids are derived from the medication id, so a med never fights with itself. */
 private fun notificationId(alert: Alert): Int =
     (alert.state.med.id * AlertKind.entries.size + alert.kind.ordinal).toInt()
 
@@ -95,13 +86,6 @@ private fun build(context: Context, alert: Alert): Notification {
     return if (alert.kind == AlertKind.DUE) dueNotification(context, alert, builder) else stock(builder)
 }
 
-/**
- * A due dose is treated as an alarm: an alarm-stream sound that survives a silenced ringer, a
- * heads-up that shows even on a locked screen, and a body that keeps counting how late it is. The
- * full-screen intent is deliberately used *without* declaring `USE_FULL_SCREEN_INTENT` — that
- * permission is reserved for calling and alarm-clock apps, and without it the heads-up still
- * appears over a locked or dark screen for a minute.
- */
 private fun dueNotification(context: Context, alert: Alert, builder: Notification.Builder): Notification {
     val dueAt = alert.state.dueAt
     builder
@@ -119,7 +103,6 @@ private fun dueNotification(context: Context, alert: Alert, builder: Notificatio
     return builder.build()
 }
 
-/** Running low is worth a line in the shade, not a buzz every time the log is touched. */
 private fun stock(builder: Notification.Builder): Notification =
     builder
         .setCategory(Notification.CATEGORY_REMINDER)
